@@ -93,7 +93,7 @@ const colorMap: Record<ContentType, { color: string; textColor: string; thumbnai
   video: { color: 'from-red-900/80 to-black', textColor: 'text-red-500', thumbnail: 'N' },
   image: { color: 'from-pink-600/80 to-orange-500/80', textColor: 'text-white', thumbnail: 'img' },
   pdf:   { color: 'bg-gradient-to-br from-gray-300 to-gray-500', textColor: 'text-gray-900', thumbnail: 'pdf' },
-  audio: { color: 'from-purple-900/80 to-blue-900/80', textColor: 'text-purple-500', thumbnail: 'audio' },
+  audio: { color: 'from-primary/80 to-blue-900/80', textColor: 'text-primary', thumbnail: 'audio' },
 };
 
 const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem, 'id'>) => void; onClose: () => void }) => {
@@ -172,7 +172,7 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
             <button type="button" onClick={onClose} className="px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
               Cancelar
             </button>
-            <button type="submit" className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <button type="submit" className="bg-gradient-to-r from-primary to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
               <Upload className="w-4 h-4" /> Enviar Arquivo
             </button>
           </div>
@@ -242,13 +242,14 @@ const AprovacaoConteudo = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 sm:p-8 h-full overflow-auto bg-[#0a0a0a] text-white custom-scrollbar"
+      className="p-4 sm:p-6 lg:p-8 h-full overflow-auto text-white custom-scrollbar"
+      style={{ background: 'var(--surface-0)' }}
     >
-      <div className="w-full max-w-screen-2xl mx-auto flex flex-col min-h-full">
+      <div className="w-full max-w-[1400px] mx-auto flex flex-col min-h-full">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2 tracking-tight">Aprovação de Conteúdo</h1>
-            <p className="text-gray-400 text-sm">Revise e aprove as mídias produzidas pela equipe.</p>
+            <h1 className="text-2xl font-bold mb-1 tracking-tight">Aprovação de Conteúdo</h1>
+            <p className="text-zinc-500 text-[13px]">Revise e aprove as mídias produzidas pela equipe.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex bg-[#141414] p-1 rounded-xl border border-white/5 shadow-inner">
@@ -264,7 +265,7 @@ const AprovacaoConteudo = () => {
             </div>
             <button
               onClick={() => setShowNovoModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] border border-blue-400/20"
+              className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-all shadow-lg shadow-red-500/20"
             >
               <Upload className="w-4 h-4" /> Adicionar Mídia
             </button>

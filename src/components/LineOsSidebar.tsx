@@ -8,11 +8,13 @@ import {
   Calendar,
   Settings,
   LogOut,
+  ChevronLeft,
   ChevronRight,
   Layers,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import useLocalStorage from '../hooks/useLocalStorage';
+import LineLogo from './LineLogo';
 
 export type LineOsTab =
   | 'dashboard'
@@ -29,128 +31,196 @@ interface Props {
 }
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'gestor', label: 'Gestor de Tarefas', icon: Layers },
-  { id: 'aprovacao', label: 'Aprovação', icon: CheckSquare },
-  { id: 'crm', label: 'CRM & Vendas', icon: Users },
-  { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
-  { id: 'academy', label: 'Academy', icon: GraduationCap },
-  { id: 'agendamento', label: 'Agendamento', icon: Calendar },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
+  { id: 'gestor', label: 'Tarefas', icon: Layers, section: 'main' },
+  { id: 'crm', label: 'CRM', icon: Users, section: 'main' },
+  { id: 'financeiro', label: 'Financeiro', icon: DollarSign, section: 'main' },
+  { id: 'aprovacao', label: 'Conteúdos', icon: CheckSquare, section: 'tools' },
+  { id: 'agendamento', label: 'Agenda', icon: Calendar, section: 'tools' },
+  { id: 'academy', label: 'Academy', icon: GraduationCap, section: 'tools' },
 ] as const;
 
 const LineOsSidebar = ({ activeTab, setActiveTab }: Props) => {
-  const [isExpanded, setIsExpanded] = useLocalStorage('lineos-sidebar-expanded', false);
+  const [isExpanded, setIsExpanded] = useLocalStorage('lineos-sidebar-expanded', true);
+
+  const mainItems = navItems.filter(i => i.section === 'main');
+  const toolItems = navItems.filter(i => i.section === 'tools');
 
   return (
-    <motion.div
-      animate={{ width: isExpanded ? 240 : 72 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-      className="bg-[#0a0a0a]/80 backdrop-blur-xl border-r border-[#222] flex flex-col h-full flex-shrink-0 py-5 z-50 overflow-hidden glass-panel"
+    <motion.aside
+      animate={{ width: isExpanded ? 220 : 64 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+      className="relative flex flex-col h-full flex-shrink-0 z-50 overflow-hidden select-none"
+      style={{ background: 'var(--surface-1)', borderRight: '1px solid var(--border-subtle)' }}
     >
-      {/* Logo + Toggle */}
-      <div className="flex items-center mb-8 px-4 gap-3 flex-shrink-0">
-        <div className="relative group cursor-pointer flex-shrink-0" onClick={() => setIsExpanded(!isExpanded)}>
-          <div className="absolute inset-0 bg-red-600 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-          <div className="relative w-10 h-10 bg-gradient-to-tr from-red-600 to-[#ff4d4d] rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-xl border border-white/10">
-            L
-          </div>
-        </div>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.05 }}
-            className="flex-1 min-w-0"
-          >
-            <div className="font-bold text-sm text-white leading-tight truncate">LINE OS</div>
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider">Plataforma</div>
-          </motion.div>
-        )}
-        {isExpanded && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={() => setIsExpanded(false)}
-            className="text-gray-600 hover:text-gray-300 transition-colors flex-shrink-0"
-          >
-            <ChevronRight className="w-4 h-4 rotate-180" />
-          </motion.button>
-        )}
-      </div>
-
-      {/* Nav */}
-      <div className="flex-1 flex flex-col gap-1 px-2">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as LineOsTab)}
-              title={!isExpanded ? item.label : undefined}
-              className={`relative flex items-center gap-3 h-10 rounded-xl transition-all duration-200 group
-                ${isExpanded ? 'px-3' : 'justify-center px-0'}
-                ${isActive
-                  ? 'bg-white/10 text-white shadow-inner border border-white/10'
-                  : 'text-gray-500 hover:bg-white/5 hover:text-gray-200'
-                }`}
+      <div className="flex items-center h-14 px-4 gap-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+        <AnimatePresence>
+          {isExpanded ? (
+            <motion.div
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center justify-between flex-1 min-w-0"
             >
-              {/* Active indicator */}
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gradient-to-b from-red-500 to-orange-500 rounded-r-full shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-              )}
-              <Icon
-                className={`w-[18px] h-[18px] flex-shrink-0 transition-transform duration-200 ${
-                  isActive ? 'scale-110' : 'group-hover:scale-110'
-                }`}
-              />
-              {isExpanded && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-sm font-medium truncate leading-none"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </button>
-          );
-        })}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center">
+                  <span className="font-heading text-xl font-medium tracking-wide text-white">Line</span>
+                  <LineLogo className="w-5 h-5 ml-1 text-[var(--color-primary)]" />
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="relative flex-shrink-0 flex items-center justify-center w-full">
+              <LineLogo className="w-7 h-7 text-[var(--color-primary)] drop-shadow-md" />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Expand toggle (collapsed state) */}
-      {!isExpanded && (
-        <div className="px-2 mb-2">
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="w-full flex items-center justify-center h-8 rounded-lg text-gray-600 hover:text-gray-300 hover:bg-white/5 transition-all"
-            title="Expandir menu"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
 
-      {/* Bottom */}
-      <div className={`flex flex-col gap-1 px-2 ${isExpanded ? '' : ''}`}>
+      {/* ─── Navigation ──────────────────────────── */}
+      <div className="flex-1 flex flex-col py-3 px-2 overflow-y-auto no-scrollbar">
+        {/* Main section */}
+        {isExpanded && (
+          <div className="px-2 mb-1.5">
+            <span className="font-heading text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-500">Módulos</span>
+          </div>
+        )}
+        <div className="flex flex-col gap-0.5">
+          {mainItems.map((item) => {
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as LineOsTab)}
+                title={!isExpanded ? item.label : undefined}
+                className={`relative flex items-center gap-2.5 h-9 rounded-lg transition-all duration-150 group
+                  ${isExpanded ? 'px-2.5' : 'justify-center px-0'}
+                  ${isActive
+                    ? 'bg-white/[0.08] text-white'
+                    : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300'
+                  }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-[var(--color-primary)]"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <Icon
+                  className={`w-[17px] h-[17px] flex-shrink-0 transition-colors duration-150 ${
+                    isActive ? 'text-red-400' : ''
+                  }`}
+                  strokeWidth={isActive ? 2 : 1.75}
+                />
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[13px] font-medium truncate leading-none"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Separator */}
+        <div className="my-3 mx-2 h-px" style={{ background: 'var(--border-subtle)' }} />
+
+        {/* Tools section */}
+        {isExpanded && (
+          <div className="px-2 mb-1.5">
+            <span className="font-heading text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-500">Ferramentas</span>
+          </div>
+        )}
+        <div className="flex flex-col gap-0.5">
+          {toolItems.map((item) => {
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as LineOsTab)}
+                title={!isExpanded ? item.label : undefined}
+                className={`relative flex items-center gap-2.5 h-9 rounded-lg transition-all duration-150 group
+                  ${isExpanded ? 'px-2.5' : 'justify-center px-0'}
+                  ${isActive
+                    ? 'bg-white/[0.08] text-white'
+                    : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300'
+                  }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-red-500"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <Icon
+                  className={`w-[17px] h-[17px] flex-shrink-0 transition-colors duration-150 ${
+                    isActive ? 'text-red-400' : ''
+                  }`}
+                  strokeWidth={isActive ? 2 : 1.75}
+                />
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[13px] font-medium truncate leading-none"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Bottom ──────────────────────────────── */}
+      <div className="flex flex-col gap-0.5 px-2 pb-3 border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={`flex items-center gap-2.5 h-9 rounded-lg text-zinc-600 hover:bg-white/[0.04] hover:text-zinc-400 transition-all duration-150
+            ${isExpanded ? 'px-2.5' : 'justify-center'}`}
+        >
+          {isExpanded ? <ChevronLeft className="w-4 h-4 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 flex-shrink-0" />}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] font-medium">
+                Recolher
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
         <button
           title="Configurações"
-          className={`flex items-center gap-3 h-10 rounded-xl text-gray-500 hover:bg-white/5 hover:text-gray-200 transition-all duration-200 group
-            ${isExpanded ? 'px-3' : 'justify-center'}`}
+          className={`flex items-center gap-2.5 h-9 rounded-lg text-zinc-600 hover:bg-white/[0.04] hover:text-zinc-400 transition-all duration-150
+            ${isExpanded ? 'px-2.5' : 'justify-center'}`}
         >
-          <Settings className="w-[18px] h-[18px] group-hover:rotate-90 transition-transform duration-500 flex-shrink-0" />
-          {isExpanded && <span className="text-sm font-medium">Configurações</span>}
-        </button>
-        <button
-          title="Sair"
-          className={`flex items-center gap-3 h-10 rounded-xl text-gray-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 group
-            ${isExpanded ? 'px-3' : 'justify-center'}`}
-        >
-          <LogOut className="w-[18px] h-[18px] group-hover:-translate-x-0.5 transition-transform duration-300 flex-shrink-0" />
-          {isExpanded && <span className="text-sm font-medium">Sair</span>}
+          <Settings className="w-[17px] h-[17px] flex-shrink-0" strokeWidth={1.75} />
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] font-medium">
+                Configurações
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </div>
-    </motion.div>
+    </motion.aside>
   );
 };
 

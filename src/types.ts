@@ -39,7 +39,7 @@ export type Client = {
   ultimaReuniao?: string;
 };
 
-export type ViewType = 'overview' | 'tasks' | 'clients' | 'board' | 'calendar';
+export type ViewType = 'overview' | 'tasks' | 'clients' | 'board' | 'calendar' | 'client-board' | 'client-database';
 
 // ─── CRM Types ───────────────────────────────────────────────────────────────
 export type Column = {

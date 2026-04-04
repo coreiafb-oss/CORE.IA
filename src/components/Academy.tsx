@@ -33,13 +33,14 @@ const Academy = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-8 h-full overflow-auto bg-[#0a0a0a] text-white"
+      className="p-6 lg:p-8 h-full overflow-auto text-white"
+      style={{ background: 'var(--surface-0)' }}
     >
-      <div className="max-w-[95vw] w-full max-w-screen-2xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold mb-1">LINE Academy</h1>
-            <p className="text-gray-400 text-sm">Base de conhecimento e treinamentos internos para nivelamento da equipe.</p>
+            <h1 className="text-2xl font-bold mb-1 tracking-tight">LINE Academy</h1>
+            <p className="text-zinc-500 text-[13px]">Base de conhecimento e treinamentos internos para nivelamento da equipe.</p>
           </div>
           <div className="bg-[#141414] border border-[#222] px-4 py-2 rounded-lg flex items-center gap-3 shadow-lg">
              <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">

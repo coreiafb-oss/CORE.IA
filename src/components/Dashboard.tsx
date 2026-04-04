@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, TrendingUp, DollarSign, Users, Calendar, CheckSquare, Clock, ArrowRight, Video, Link, MessageSquare } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Calendar, CheckSquare, Clock, ArrowUpRight, ArrowDownRight, Video, Briefcase, Target, Activity } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 
-// --- Dashboard Helper Functions ---
 const getTodayStr = () => new Date().toISOString().split('T')[0];
 const toIsoDate = (d: string) => {
   if (d.includes('/')) {
@@ -15,11 +14,13 @@ const toIsoDate = (d: string) => {
   return d;
 };
 
+const formatCurrency = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
+
 const Dashboard = ({ onNavigate }: { onNavigate: (tab: any) => void }) => {
   const { leads, transactions, contentItems, meetings, tasks } = useAppContext();
   const today = getTodayStr();
 
-  // --- KPIs Calculations ---
+  // ─── Calculations ──────────────────────────────────────
   const pipelineValue = useMemo(() => leads
     .filter(l => l.columnId !== 'ganho' && l.columnId !== 'perdido')
     .reduce((acc, curr) => acc + curr.value, 0), [leads]);
@@ -33,308 +34,258 @@ const Dashboard = ({ onNavigate }: { onNavigate: (tab: any) => void }) => {
   const pendingContents = useMemo(() => contentItems.filter(c => c.status !== 'APROVADO'), [contentItems]);
   const pendingTasks = useMemo(() => tasks.filter(t => t.statusId !== 's4'), [tasks]);
 
-  // --- CRM Chart Data ---
-  const crmData = useMemo(() => {
+  const contentData = useMemo(() => [
+    { name: 'Pendente', value: contentItems.filter(c => c.status === 'PENDENTE').length, color: '#6366f1' },
+    { name: 'Revisão', value: contentItems.filter(c => c.status === 'REVISÃO').length, color: '#f59e0b' },
+    { name: 'Aprovado', value: contentItems.filter(c => c.status === 'APROVADO').length, color: '#10b981' },
+  ].filter(d => d.value > 0), [contentItems]);
+
+  const todaysMeetings = useMemo(() => meetings
+    .filter(m => toIsoDate(m.date) === today || m.date.toLowerCase() === 'hoje')
+    .sort((a, b) => a.time.localeCompare(b.time)), [meetings, today]);
+
+  const topLeads = useMemo(() => leads
+    .filter(l => l.columnId !== 'ganho' && l.columnId !== 'perdido')
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 4), [leads]);
+
+  const crmBarData = useMemo(() => {
     const cols = [
-      { id: 'leads', name: 'Leads' },
-      { id: 'agendada', name: 'Reunião' },
-      { id: 'proposta', name: 'Proposta' },
-      { id: 'ganho', name: 'Ganho' }
+      { id: 'leads', name: 'Leads', color: '#6366f1' },
+      { id: 'agendada', name: 'Reunião', color: '#8b5cf6' },
+      { id: 'proposta', name: 'Proposta', color: '#f59e0b' },
+      { id: 'ganho', name: 'Ganho', color: '#10b981' },
     ];
     return cols.map(c => ({
       name: c.name,
-      valor: leads.filter(l => l.columnId === c.id).reduce((acc, curr) => acc + curr.value, 0)
+      valor: leads.filter(l => l.columnId === c.id).reduce((acc, curr) => acc + curr.value, 0),
+      fill: c.color,
     }));
   }, [leads]);
 
-  // --- Content Chart Data ---
-  const contentData = useMemo(() => {
-    return [
-      { name: 'Pendente', value: contentItems.filter(c => c.status === 'PENDENTE').length, color: '#3b82f6' },
-      { name: 'Revisão', value: contentItems.filter(c => c.status === 'REVISÃO').length, color: '#eab308' },
-      { name: 'Aprovado', value: contentItems.filter(c => c.status === 'APROVADO').length, color: '#22c55e' }
-    ].filter(d => d.value > 0);
-  }, [contentItems]);
+  const stagger = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { delay: i * 0.05, duration: 0.35 } });
 
-  // --- My Day (Meetings + Urgent Tasks) ---
-  const todaysMeetings = useMemo(() => {
-    return meetings
-      .filter(m => toIsoDate(m.date) === today || m.date.toLowerCase() === 'hoje')
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [meetings, today]);
+  // ─── KPI Cards Config ──────────────────────────────────
+  const kpis = [
+    { label: 'Pipeline Ativo', value: formatCurrency(pipelineValue), icon: Target, color: 'red', tab: 'crm' as const, sub: `${leads.filter(l => l.columnId !== 'ganho' && l.columnId !== 'perdido').length} leads abertos` },
+    { label: 'Lucro Líquido', value: formatCurrency(profit), icon: DollarSign, color: profit >= 0 ? 'emerald' : 'red', tab: 'financeiro' as const, sub: `Margem ${revenue > 0 ? ((profit / revenue) * 100).toFixed(0) : 0}%` },
+    { label: 'Aprovações', value: `${pendingContents.length}`, icon: CheckSquare, color: 'amber', tab: 'aprovacao' as const, sub: 'itens pendentes' },
+    { label: 'Tarefas Ativas', value: `${pendingTasks.length}`, icon: Activity, color: 'violet', tab: 'gestor' as const, sub: 'em andamento' },
+  ];
 
-  // --- Top Leads ---
-  const topLeads = useMemo(() => {
-    return leads
-      .filter(l => l.columnId !== 'ganho' && l.columnId !== 'perdido')
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 3);
-  }, [leads]);
-
-  // --- Lead Sources ---
-  const leadSourcesData = useMemo(() => {
-    const sources: Record<string, number> = {};
-    leads.forEach(l => {
-      const s = l.source || 'Sem Origem';
-      sources[s] = (sources[s] || 0) + 1;
-    });
-    return Object.entries(sources).map(([name, value]) => ({ name, value }));
-  }, [leads]);
-  const SOURCE_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899'];
+  const colorMap: Record<string, { bg: string; text: string; glow: string; border: string }> = {
+    red:  { bg: 'bg-red-500/10', text: 'text-red-400', glow: 'hover:shadow-red-500/5', border: 'hover:border-red-500/20' },
+    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'hover:shadow-emerald-500/5', border: 'hover:border-emerald-500/20' },
+    red:     { bg: 'bg-red-500/10', text: 'text-red-400', glow: 'hover:shadow-red-500/5', border: 'hover:border-red-500/20' },
+    amber:   { bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'hover:shadow-amber-500/5', border: 'hover:border-amber-500/20' },
+    violet:  { bg: 'bg-violet-500/10', text: 'text-violet-400', glow: 'hover:shadow-violet-500/5', border: 'hover:border-violet-500/20' },
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="p-8 h-full overflow-y-auto custom-scrollbar bg-gradient-to-br from-[#0a0a0a] to-[#111] text-white flex-1"
-    >
-      <div className="max-w-[95vw] w-full mx-auto space-y-[clamp(1.5rem,3vh,3rem)]">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="p-6 lg:p-8 h-full overflow-y-auto custom-scrollbar" style={{ background: 'var(--surface-0)' }}>
+      <div className="max-w-[1400px] mx-auto space-y-6">
+
+        {/* ─── Header ──────────────────────────── */}
+        <motion.div {...stagger(0)} className="flex items-end justify-between">
           <div>
-             <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-               <span className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
-                 <LayoutDashboard className="w-5 h-5 text-white" />
-               </span>
-               Dashboard
-             </h1>
-             <p className="text-gray-400 text-sm">Resumo executivo do dia. Tudo o que você precisa no mesmo lugar.</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight mb-1">Dashboard</h1>
+            <p className="text-[13px] text-zinc-500">Visão geral da operação em tempo real.</p>
           </div>
-          <div className="text-right">
-             <div className="text-xl font-bold text-gray-200">
-               {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^\w/, c => c.toUpperCase())}
-             </div>
-             <div className="text-sm font-medium text-orange-500 flex items-center justify-end gap-1.5 mt-1">
-                <Clock className="w-3.5 h-3.5" /> Foco e Produtividade
-             </div>
+          <div className="text-right hidden md:block">
+            <div className="text-[13px] font-medium text-zinc-400">
+              {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^\w/, c => c.toUpperCase())}
+            </div>
           </div>
+        </motion.div>
+
+        {/* ─── KPI Row ─────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpis.map((kpi, i) => {
+            const colors = colorMap[kpi.color];
+            const Icon = kpi.icon;
+            return (
+              <motion.div
+                key={kpi.label}
+                {...stagger(i + 1)}
+                whileHover={{ y: -2 }}
+                onClick={() => onNavigate(kpi.tab)}
+                className={`relative cursor-pointer rounded-xl p-5 transition-all duration-200 group ${colors.glow} ${colors.border} hover:shadow-xl`}
+                style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-9 h-9 rounded-lg ${colors.bg} flex items-center justify-center ${colors.text}`}>
+                    <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-zinc-700 group-hover:text-zinc-400 transition-colors" />
+                </div>
+                <div className="text-xl font-bold text-white tracking-tight mb-0.5">{kpi.value}</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-zinc-500 font-medium">{kpi.label}</span>
+                  <span className={`text-[10px] font-medium ${colors.text}`}>{kpi.sub}</span>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Top KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           <motion.div whileHover={{ y: -4 }} className="bg-[#141414] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all shadow-lg hover:shadow-blue-500/10 cursor-pointer" onClick={() => onNavigate('crm')}>
-             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -mr-6 -mt-6 transition-all group-hover:bg-blue-500/20" />
-             <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 group-hover:scale-110 transition-transform">
-                   <Users className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">Pipeline Ativo</span>
-             </div>
-             <h3 className="text-2xl font-black tracking-tight mb-1 group-hover:text-blue-400 transition-colors">
-               R$ {pipelineValue.toLocaleString('pt-BR')}
-             </h3>
-             <p className="text-xs text-gray-500 font-medium">No funil de vendas (Aberto)</p>
-           </motion.div>
+        {/* ─── Content Grid ────────────────────── */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
-           <motion.div whileHover={{ y: -4 }} className="bg-[#141414] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:border-green-500/30 transition-all shadow-lg hover:shadow-green-500/10 cursor-pointer" onClick={() => onNavigate('financeiro')}>
-             <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl -mr-6 -mt-6 transition-all group-hover:bg-green-500/20" />
-             <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400 border border-green-500/20 group-hover:scale-110 transition-transform">
-                   <DollarSign className="w-5 h-5" />
-                </div>
-                <span className={`text-xs font-bold px-2 py-1 rounded ${profit >= 0 ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>Margem</span>
-             </div>
-             <motion.h3 
-               key={profit}
-               initial={{ scale: 1.1, color: '#22c55e' }}
-               animate={{ scale: 1, color: profit < 0 ? '#f87171' : '#ffffff' }}
-               transition={{ duration: 0.5 }}
-               className={`text-2xl font-black tracking-tight mb-1 group-hover:text-green-400 transition-colors`}
-             >
-               R$ {profit.toLocaleString('pt-BR')}
-             </motion.h3>
-             <p className="text-xs text-gray-500 font-medium">Lucro Líquido (Receitas - Despesas)</p>
-           </motion.div>
-
-           <motion.div whileHover={{ y: -4 }} className="bg-[#141414] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:border-yellow-500/30 transition-all shadow-lg hover:shadow-yellow-500/10 cursor-pointer" onClick={() => onNavigate('aprovacao')}>
-             <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-full blur-2xl -mr-6 -mt-6 transition-all group-hover:bg-yellow-500/20" />
-             <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 border border-yellow-500/20 group-hover:scale-110 transition-transform">
-                   <CheckSquare className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">Aprovações</span>
-             </div>
-             <h3 className="text-2xl font-black tracking-tight mb-1 group-hover:text-yellow-400 transition-colors">
-               {pendingContents.length} Itens
-             </h3>
-             <p className="text-xs text-gray-500 font-medium">{pendingContents.length === 1 ? 'Aguardando validação' : 'Aguardando validação'}</p>
-           </motion.div>
-
-           <motion.div whileHover={{ y: -4 }} className="bg-[#141414] border border-[#222] rounded-2xl p-6 relative overflow-hidden group hover:border-purple-500/30 transition-all shadow-lg hover:shadow-purple-500/10 cursor-pointer" onClick={() => onNavigate('gestor')}>
-             <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -mr-6 -mt-6 transition-all group-hover:bg-purple-500/20" />
-             <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 group-hover:scale-110 transition-transform">
-                   <TrendingUp className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-1 rounded">Tarefas Ativas</span>
-             </div>
-             <h3 className="text-2xl font-black tracking-tight mb-1 group-hover:text-purple-400 transition-colors">
-               {pendingTasks.length} Projetos
-             </h3>
-             <p className="text-xs text-gray-500 font-medium">Em andamento na agência</p>
-           </motion.div>
-        </div>
-
-         {/* Main Content Grid 1: Operations */}
-         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 flex-1 min-h-[40vh]">
+          {/* Meu Dia */}
+          <motion.div {...stagger(5)} className="rounded-xl p-5 flex flex-col" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[13px] font-semibold text-zinc-200 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-red-400" strokeWidth={1.75} /> Meu Dia
+              </h3>
+              <button onClick={() => onNavigate('agendamento')} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-medium transition-colors">
+                Ver tudo →
+              </button>
+            </div>
             
-            {/* Section: Meu Dia (Meetings) */}
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-6 flex flex-col shadow-xl">
-               <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                     <Calendar className="w-5 h-5 text-orange-500" /> Meu Dia
-                  </h3>
-                  <button onClick={() => onNavigate('agendamento')} className="text-xs bg-[#222] hover:bg-[#333] px-2.5 py-1 rounded text-gray-300 font-medium transition-colors">Ver Agenda</button>
-               </div>
-               
-               <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 min-h-[250px]">
-                  {todaysMeetings.length === 0 ? (
-                     <div className="h-full flex flex-col items-center justify-center text-gray-500 text-center py-10">
-                        <div className="w-16 h-16 rounded-full bg-[#1e1e1e] flex items-center justify-center mb-3">
-                           <Calendar className="w-6 h-6 opacity-40" />
-                        </div>
-                        <p className="text-sm">Dia livre. Nenhuma reunião para hoje.</p>
-                     </div>
-                  ) : (
-                     todaysMeetings.map(m => (
-                        <div key={m.id} className="relative bg-[#1a1a1a] border border-[#333] rounded-xl p-4 hover:border-orange-500/50 transition-colors group">
-                           <div className="absolute left-0 top-3 bottom-3 w-1 bg-orange-500 rounded-r-full" />
-                           <div className="pl-2">
-                              <div className="font-semibold text-sm mb-2 group-hover:text-orange-400 transition-colors">{m.title}</div>
-                              <div className="flex items-center justify-between text-xs text-gray-400">
-                                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{m.time}</span>
-                                 {m.platform && <span className="flex items-center gap-1.5 bg-white/5 px-2 py-0.5 rounded text-blue-400"><Video className="w-3.5 h-3.5" />{m.platform}</span>}
-                              </div>
-                              {m.client && <div className="mt-2 text-xs text-gray-500 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {m.client}</div>}
-                           </div>
-                        </div>
-                     ))
-                  )}
-               </div>
-            </div>
-
-            {/* Section: Status Conteúdos */}
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-6 flex flex-col shadow-xl">
-               <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                     <CheckSquare className="w-5 h-5 text-yellow-500" /> Review de Conteúdos
-                  </h3>
-                  <button onClick={() => onNavigate('aprovacao')} className="text-xs bg-[#222] hover:bg-[#333] px-2.5 py-1 rounded text-gray-300 font-medium transition-colors">Aprovações</button>
-               </div>
-               
-               <div className="flex-1 flex flex-col justify-center items-center">
-                  {contentData.length > 0 ? (
-                     <div className="w-full flex items-center justify-between">
-                        <div className="h-[200px] w-1/2">
-                           <ResponsiveContainer width="100%" height="100%">
-                             <PieChart>
-                               <Pie data={contentData} innerRadius={55} outerRadius={80} dataKey="value" stroke="none" paddingAngle={5}>
-                                 {contentData.map((entry, idx) => (
-                                   <Cell key={`cell-${idx}`} fill={entry.color} />
-                                 ))}
-                               </Pie>
-                               <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #333', borderRadius: '8px' }} />
-                             </PieChart>
-                           </ResponsiveContainer>
-                        </div>
-                        <div className="w-1/2 space-y-4 pl-4 border-l border-[#222]">
-                           {contentData.map(d => (
-                              <div key={d.name} className="flex flex-col">
-                                 <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider flex items-center gap-1.5 mb-1">
-                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} /> {d.name}
-                                 </div>
-                                 <div className="text-xl font-bold">{d.value} <span className="text-xs font-normal text-gray-500">itens</span></div>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-                  ) : (
-                     <div className="text-center text-gray-500 text-sm">Tudo aprovado e em dia! 🎉</div>
-                  )}
-               </div>
-               
-               {pendingContents.length > 0 && (
-                   <div className="mt-4 pt-4 border-t border-[#222]">
-                      <div className="text-xs text-gray-400 mb-3 font-medium">Últimos Solicitados</div>
-                      <div className="space-y-2">
-                         {pendingContents.slice(0, 2).map(c => (
-                            <div key={c.id} className="bg-[#1a1a1a] rounded flex items-center justify-between px-3 py-2 border border-[#222] hover:border-yellow-500/30 transition-colors group cursor-pointer" onClick={() => onNavigate('aprovacao')}>
-                               <span className="text-xs font-medium truncate pr-2 group-hover:text-yellow-400">{c.title}</span>
-                               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase flex-shrink-0 ${
-                                  c.status === 'PENDENTE' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                               }`}>{c.status}</span>
-                            </div>
-                         ))}
+            <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-1">
+              {todaysMeetings.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center py-10">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: 'var(--surface-3)' }}>
+                    <Calendar className="w-5 h-5 text-zinc-600" />
+                  </div>
+                  <p className="text-xs text-zinc-600">Dia livre — sem reuniões agendadas</p>
+                </div>
+              ) : (
+                todaysMeetings.map((m, i) => (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="relative rounded-lg p-3 group hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    style={{ border: '1px solid var(--border-subtle)' }}
+                  >
+                    <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-r-full bg-red-500/60" />
+                    <div className="pl-2.5">
+                      <div className="text-[13px] font-medium text-zinc-200 mb-1.5 group-hover:text-white transition-colors">{m.title}</div>
+                      <div className="flex items-center gap-3 text-[11px] text-zinc-500">
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{m.time}</span>
+                        {m.platform && <span className="flex items-center gap-1 text-red-400/80"><Video className="w-3 h-3" />{m.platform}</span>}
                       </div>
-                   </div>
-               )}
+                      {m.client && <div className="mt-1.5 text-[11px] text-zinc-600 flex items-center gap-1"><Users className="w-3 h-3" />{m.client}</div>}
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </motion.div>
+
+          {/* Status de Conteúdos */}
+          <motion.div {...stagger(6)} className="rounded-xl p-5 flex flex-col" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[13px] font-semibold text-zinc-200 flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-amber-400" strokeWidth={1.75} /> Conteúdos
+              </h3>
+              <button onClick={() => onNavigate('aprovacao')} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-medium transition-colors">
+                Revisar →
+              </button>
+            </div>
+            
+            <div className="flex-1 flex flex-col">
+              {contentData.length > 0 ? (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-28 h-28 flex-shrink-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={contentData} innerRadius={32} outerRadius={48} dataKey="value" stroke="none" paddingAngle={4}>
+                          {contentData.map((entry, idx) => <Cell key={idx} fill={entry.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    {contentData.map(d => (
+                      <div key={d.name} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                          <span className="text-[12px] text-zinc-400">{d.name}</span>
+                        </div>
+                        <span className="text-[13px] font-semibold text-zinc-200">{d.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-xs text-zinc-600">Tudo aprovado ✓</p>
+                </div>
+              )}
+
+              {pendingContents.length > 0 && (
+                <div className="pt-3 space-y-1.5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                  <div className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider mb-2">Pendentes</div>
+                  {pendingContents.slice(0, 3).map(c => (
+                    <div
+                      key={c.id}
+                      onClick={() => onNavigate('aprovacao')}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-white/[0.03] transition-colors"
+                      style={{ border: '1px solid var(--border-subtle)' }}
+                    >
+                      <span className="text-[12px] text-zinc-300 truncate pr-3 font-medium">{c.title}</span>
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded uppercase flex-shrink-0 ${
+                        c.status === 'PENDENTE' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
+                      }`}>{c.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Pipeline (Bar Chart + Top Deals) */}
+          <motion.div {...stagger(7)} className="rounded-xl p-5 flex flex-col" style={{ background: 'var(--surface-2)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[13px] font-semibold text-zinc-200 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-violet-400" strokeWidth={1.75} /> Pipeline
+              </h3>
+              <button onClick={() => onNavigate('crm')} className="text-[11px] text-zinc-500 hover:text-zinc-300 font-medium transition-colors">
+                CRM →
+              </button>
             </div>
 
-            {/* Section: Top Deals & Acquisition */}
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-6 flex flex-col shadow-xl">
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-lg flex items-center gap-2 text-white">
-                     <TrendingUp className="w-5 h-5 text-blue-500" /> Inteligência de Vendas
-                  </h3>
-                  <button onClick={() => onNavigate('crm')} className="text-xs bg-[#222] hover:bg-[#333] px-2.5 py-1 rounded text-gray-300 font-medium transition-colors">CRM Completo</button>
-               </div>
-               
-               <div className="flex-1 flex flex-col gap-6">
-                 {/* Top Deals List */}
-                 <div>
-                   <h4 className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-3">Maiores Acordos (Em Aberto)</h4>
-                   <div className="space-y-2">
-                     {topLeads.map((l, i) => (
-                       <div key={l.id} className="flex items-center justify-between bg-[#1a1a1a] p-3 rounded-lg border border-[#333] group hover:border-[#444] transition-colors">
-                         <div className="flex items-center gap-3">
-                           <div className="w-6 h-6 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs">{i + 1}</div>
-                           <div>
-                             <div className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors">{l.title}</div>
-                             {l.contactName && <div className="text-xs text-gray-500">{l.contactName}</div>}
-                           </div>
-                         </div>
-                         <div className="text-right">
-                           <div className="text-sm font-bold text-green-400">R$ {l.value.toLocaleString('pt-BR')}</div>
-                           <div className="text-[10px] uppercase font-semibold text-gray-500 bg-[#222] px-1.5 rounded">{l.columnId}</div>
-                         </div>
-                       </div>
-                     ))}
-                     {topLeads.length === 0 && <div className="text-xs text-gray-500 text-center p-4">Pipeline vazio no momento.</div>}
-                   </div>
-                 </div>
-
-                 {/* Lead Sources Small Chart */}
-                 <div className="pt-4 border-t border-[#333] flex items-center gap-4">
-                   <div className="w-20 h-20 flex-shrink-0">
-                     <ResponsiveContainer width="100%" height="100%">
-                       <PieChart>
-                         <Pie data={leadSourcesData} innerRadius={20} outerRadius={35} dataKey="value" stroke="none">
-                           {leadSourcesData.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={SOURCE_COLORS[index % SOURCE_COLORS.length]} />
-                           ))}
-                         </Pie>
-                         <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #333', fontSize: '12px' }} />
-                       </PieChart>
-                     </ResponsiveContainer>
-                   </div>
-                   <div className="flex-1">
-                     <h4 className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">Origem dos Contatos</h4>
-                     <div className="space-y-1.5 flex flex-wrap gap-x-4">
-                       {leadSourcesData.map((s, idx) => (
-                         <div key={s.name} className="flex items-center gap-1.5">
-                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SOURCE_COLORS[idx % SOURCE_COLORS.length] }} />
-                           <span className="text-xs font-medium text-gray-300">{s.name}</span>
-                           <span className="text-xs text-gray-500">({s.value})</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 </div>
-               </div>
+            {/* Mini bar chart */}
+            <div className="h-32 mb-4 -mx-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={crmBarData} margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#52525b', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${v / 1000}k`} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                    contentStyle={{ background: 'var(--surface-3)', border: '1px solid var(--border-default)', borderRadius: '8px', fontSize: '12px', color: '#fafafa' }}
+                    formatter={(v: number) => [formatCurrency(v), '']}
+                  />
+                  <Bar dataKey="valor" radius={[4, 4, 0, 0]} barSize={24}>
+                    {crmBarData.map((entry, idx) => <Cell key={idx} fill={entry.fill} opacity={0.8} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
-         </div>
+            {/* Top deals */}
+            <div className="pt-3 space-y-1.5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="text-[10px] text-zinc-600 font-medium uppercase tracking-wider mb-2">Top Deals</div>
+              {topLeads.map((l, i) => (
+                <div key={l.id} className="flex items-center justify-between py-1.5 group">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center flex-shrink-0 bg-red-500/10 text-red-400">{i + 1}</span>
+                    <span className="text-[12px] text-zinc-300 truncate font-medium group-hover:text-white transition-colors">{l.title}</span>
+                  </div>
+                  <span className="text-[12px] font-semibold text-emerald-400 flex-shrink-0 ml-2">{formatCurrency(l.value)}</span>
+                </div>
+              ))}
+              {topLeads.length === 0 && <p className="text-xs text-zinc-600 text-center py-3">Pipeline vazio</p>}
+            </div>
+          </motion.div>
+
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

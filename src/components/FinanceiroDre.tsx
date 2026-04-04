@@ -243,19 +243,20 @@ const FinanceiroDre = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-8 h-full overflow-auto bg-[#0a0a0a] text-white"
+      className="p-6 lg:p-8 h-full overflow-auto text-white"
+      style={{ background: 'var(--surface-0)' }}
     >
-      <div className="max-w-[95vw] w-full max-w-screen-2xl mx-auto flex flex-col min-h-full">
+      <div className="max-w-[1400px] mx-auto flex flex-col min-h-full">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold mb-1">Financeiro & DRE</h1>
+            <h1 className="text-2xl font-bold mb-1 tracking-tight">Financeiro & DRE</h1>
             <p className="text-gray-400 text-sm">
               Acompanhe o fluxo de caixa e a saúde financeira da agência em tempo real.
             </p>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-all shadow-lg shadow-red-500/20"
           >
             <Plus className="w-4 h-4" /> Nova Transação
           </button>

@@ -1,33 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { Plus, MoreHorizontal, Flag, GripVertical } from 'lucide-react';
+import { Plus, MoreHorizontal, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
-import { Task } from '../types';
+import { Client } from '../types';
 
-const priorityConfig: Record<string, { color: string; label: string }> = {
-  Urgent: { color: '#ef4444', label: 'Urgente' },
-  High: { color: '#eab308', label: 'Alta' },
-  Normal: { color: '#3b82f6', label: 'Normal' },
-  Low: { color: '#9ca3af', label: 'Baixa' },
-  None: { color: 'transparent', label: '' },
-};
-
-interface BoardViewProps {
-  filteredTasks: Task[];
+interface ClientBoardViewProps {
+  filteredClients: Client[];
   searchQuery: string;
-  filterPriority: string | null;
 }
 
-const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProps) => {
-  const { setTasks, taskStatuses, addTask } = useAppContext();
-  const [newTaskName, setNewTaskName] = useState('');
+const ClientBoardView = ({ filteredClients, searchQuery }: ClientBoardViewProps) => {
+  const { setClients, clientStatuses, addClient } = useAppContext();
+  const [newClientName, setNewClientName] = useState('');
   const [addingToColumn, setAddingToColumn] = useState<string | null>(null);
   const dragItem = useRef<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const isFiltering = !!searchQuery || !!filterPriority;
+  const isFiltering = !!searchQuery;
 
-  const handleDragStart = (taskId: string) => {
-    dragItem.current = taskId;
+  const handleDragStart = (clientId: string) => {
+    dragItem.current = clientId;
   };
 
   const handleDragOver = (e: React.DragEvent, statusId: string) => {
@@ -41,40 +32,42 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
 
   const handleDrop = (statusId: string) => {
     if (dragItem.current) {
-      setTasks(prev =>
-        prev.map(t => t.id === dragItem.current ? { ...t, statusId } : t)
+      setClients(prev =>
+        prev.map(c => c.id === dragItem.current ? { ...c, statusId } : c)
       );
     }
     dragItem.current = null;
     setDragOverId(null);
   };
 
-  const handleAddTask = (statusId: string) => {
-    if (!newTaskName.trim()) {
+  const handleAddClient = (statusId: string) => {
+    if (!newClientName.trim()) {
       setAddingToColumn(null);
       return;
     }
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      name: newTaskName,
+    const newClient: Client = {
+      id: `client-${Date.now()}`,
+      name: newClientName,
       statusId,
       assignees: ['https://i.pravatar.cc/150?img=11'],
-      dueDate: '',
-      priority: 'Normal' as any,
+      faturamento: '-',
+      segmento: '-',
+      repositorio: '-',
+      ultimaReuniao: '-'
     };
-    setTasks(prev => [...prev, newTask]);
-    setNewTaskName('');
+    setClients(prev => [...prev, newClient]);
+    setNewClientName('');
     setAddingToColumn(null);
   };
 
   return (
     <div className="flex gap-4 p-6 h-full overflow-x-auto custom-scrollbar">
-      {taskStatuses.map(status => {
-        const columnTasks = filteredTasks.filter(t => t.statusId === status.id);
+      {clientStatuses.map(status => {
+        const columnClients = filteredClients.filter(c => c.statusId === status.id);
         const isOver = dragOverId === status.id;
 
         // Hide empty columns when filtering
-        if (isFiltering && columnTasks.length === 0) return null;
+        if (isFiltering && columnClients.length === 0) return null;
 
         return (
           <div
@@ -92,7 +85,7 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }} />
                 <span className="text-sm font-semibold text-gray-200">{status.name}</span>
                 <span className="text-xs text-gray-500 bg-[#2b2b2b] px-1.5 py-0.5 rounded-full font-medium">
-                  {columnTasks.length}
+                  {columnClients.length}
                 </span>
               </div>
               <div className="flex items-center gap-1">
@@ -111,68 +104,48 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
             {/* Cards */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
               <AnimatePresence>
-                {columnTasks.map(task => {
-                  const prio = priorityConfig[task.priority] || priorityConfig.None;
+                {columnClients.map(client => {
                   return (
                     <motion.div
-                      key={task.id}
+                      key={client.id}
                       layout
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       draggable
-                      onDragStart={() => handleDragStart(task.id)}
+                      onDragStart={() => handleDragStart(client.id)}
                       className="bg-[#1e1e1e] border border-[#2b2b2b] rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-[#444] transition-all group shadow-sm hover:shadow-md"
                     >
-                      {/* Priority bar */}
-                      {task.priority !== 'None' && (
-                        <div
-                          className="w-full h-0.5 rounded-full mb-2"
-                          style={{ backgroundColor: prio.color }}
-                        />
-                      )}
-
+                      <div className="w-full h-0.5 rounded-full mb-2" style={{ backgroundColor: status.color }} />
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm text-gray-200 font-medium leading-snug flex-1">
-                          {task.name}
+                          {client.name}
                         </span>
                         <GripVertical className="w-3.5 h-3.5 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5" />
                       </div>
 
-                      {/* Tags */}
-                      {task.tags && task.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {task.tags.map(tag => (
-                            <span
-                              key={tag.name}
-                              className="px-1.5 py-0.5 text-[10px] font-medium rounded"
-                              style={{ color: tag.color, backgroundColor: tag.bgColor }}
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
+                      <div className="mt-2 flex flex-col gap-1">
+                        <div className="text-[10px] text-gray-500 flex justify-between">
+                          <span>Faturamento:</span>
+                          <span className="text-gray-300 font-medium">{client.faturamento || '-'}</span>
                         </div>
-                      )}
+                        <div className="text-[10px] text-gray-500 flex justify-between">
+                          <span>Segmento:</span>
+                          <span className="text-gray-300 font-medium">{client.segmento || '-'}</span>
+                        </div>
+                      </div>
 
                       {/* Footer */}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#2b2b2b]/50">
                         <div className="flex items-center gap-1.5">
-                          {task.priority !== 'None' && (
-                            <div className="flex items-center gap-1 text-[10px] font-medium" style={{ color: prio.color }}>
-                              <Flag className="w-3 h-3" style={{ fill: prio.color }} />
-                              {prio.label}
-                            </div>
-                          )}
-                          {task.dueDate && (
-                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                              task.dueDate.includes('atrás') ? 'text-red-400 bg-red-500/10' : 'text-gray-400 bg-white/5'
-                            }`}>
-                              {task.dueDate}
+                          {client.ultimaReuniao && client.ultimaReuniao !== '-' && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded text-gray-400 bg-white/5">
+                              Última reunião: {client.ultimaReuniao}
                             </span>
                           )}
                         </div>
                         <div className="flex -space-x-1">
-                          {task.assignees.slice(0, 2).map((avatar, i) => (
+                          {client.assignees.slice(0, 2).map((avatar, i) => (
                             <img
                               key={i}
                               src={avatar}
@@ -193,14 +166,14 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
                   <input
                     type="text"
                     autoFocus
-                    value={newTaskName}
-                    onChange={(e) => setNewTaskName(e.target.value)}
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddTask(status.id);
-                      if (e.key === 'Escape') { setAddingToColumn(null); setNewTaskName(''); }
+                      if (e.key === 'Enter') handleAddClient(status.id);
+                      if (e.key === 'Escape') { setAddingToColumn(null); setNewClientName(''); }
                     }}
-                    onBlur={() => handleAddTask(status.id)}
-                    placeholder="Nome da tarefa..."
+                    onBlur={() => handleAddClient(status.id)}
+                    placeholder="Nome do cliente..."
                     className="bg-transparent border-none outline-none text-sm text-white w-full placeholder-gray-600"
                   />
                 </div>
@@ -214,7 +187,7 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
                 className="flex items-center gap-1.5 px-3 py-2.5 text-sm text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors m-1 rounded-lg"
               >
                 <Plus className="w-4 h-4" />
-                Adicionar card
+                Adicionar cliente
               </button>
             )}
           </div>
@@ -224,4 +197,4 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
   );
 };
 
-export default BoardView;
+export default ClientBoardView;

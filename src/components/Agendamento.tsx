@@ -24,7 +24,7 @@ const getPlatformColor = (platform: string) => {
   const p = platform.toLowerCase();
   if (p.includes('meet')) return { bg: 'bg-emerald-500/10', text: 'text-emerald-400', dot: 'bg-emerald-400' };
   if (p.includes('zoom')) return { bg: 'bg-blue-500/10', text: 'text-blue-400', dot: 'bg-blue-400' };
-  if (p.includes('teams')) return { bg: 'bg-indigo-500/10', text: 'text-indigo-400', dot: 'bg-indigo-400' };
+  if (p.includes('teams')) return { bg: 'bg-red-500/10', text: 'text-red-400', dot: 'bg-red-400' };
   if (p.includes('presencial')) return { bg: 'bg-orange-500/10', text: 'text-orange-400', dot: 'bg-orange-400' };
   return { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-400' };
 };
@@ -298,24 +298,24 @@ const Agendamento = () => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-      className="p-8 h-full flex flex-col text-white overflow-hidden"
+      className="p-6 lg:p-8 h-full flex flex-col text-white overflow-hidden"
+      style={{ background: 'var(--surface-0)' }}
     >
-      <div className="max-w-[1600px] mx-auto w-full h-full flex flex-col">
+      <div className="max-w-[1400px] mx-auto w-full h-full flex flex-col">
         {/* Superior Actions & Status */}
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight mb-1 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+            <h1 className="text-2xl font-bold tracking-tight mb-1">
               Agendamentos
             </h1>
-            <p className="text-gray-400 text-sm">Visualize e coordene as próximas Calls e reuniões estrategicas.</p>
+            <p className="text-zinc-500 text-[13px]">Visualize e coordene as próximas calls e reuniões estratégicas.</p>
           </div>
           <button
             onClick={() => setIsDrawerOpen(true)}
-            className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.6)] transition-all"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-lg shadow-red-500/20 transition-all"
           >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-            <CalendarIcon className="w-4 h-4 relative z-10" /> 
-            <span className="relative z-10">Agendar Call</span>
+            <CalendarIcon className="w-4 h-4" /> 
+            <span>Agendar Call</span>
           </button>
         </div>
 

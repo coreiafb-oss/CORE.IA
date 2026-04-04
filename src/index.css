@@ -1,106 +1,176 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --bg-main: #0a0a0a;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --bg-main: #09090b;
+  --color-primary: #E31837;
+  --color-primary-hover: #FF2A4A;
 }
 
 :root {
-  --primary: #e8384f;
-  --bg-main: #0a0a0a;
-  --bg-card: #141414;
-  --bg-card-hover: #1a1a1a;
-  --border: #222222;
-  --border-focus: #444444;
-  --text-primary: #ffffff;
-  --text-secondary: #9ea1a3;
-  --text-muted: #6b6b6b;
-  --glass: rgba(20, 20, 20, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.05);
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-}
+  /* ─── Silicon Valley Design Tokens ───────────────────────────────── */
+  --primary: #E31837;
+  --primary-hover: #FF2A4A;
+  --accent: #f97316;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 
-html {
-  /* Fluid typography: base font size scales smoothly between screens */
-  font-size: clamp(12px, 0.75vw + 6px, 18px);
+  /* Surface System — layered depth like Linear/Vercel */
+  --surface-0: #09090b;      /* deepest background */
+  --surface-1: #0f0f12;      /* main content area */
+  --surface-2: #16161a;      /* cards */
+  --surface-3: #1c1c22;      /* elevated cards, dropdowns */
+  --surface-4: #26262e;      /* hover states */
+
+  /* Border hierarchy */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(227, 24, 55, 0.5);
+
+  /* Text hierarchy — proper contrast ratios */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
+  --text-ghost: #3f3f46;
+
+  /* Glass */
+  --glass: rgba(15, 15, 18, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.06);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
   body {
-    @apply bg-[#0a0a0a] text-gray-200 antialiased;
+    @apply antialiased;
+    background: var(--surface-0);
+    color: var(--text-secondary);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Custom Scrollbar */
+/* ─── Scrollbar — invisible until hover ────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #222;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #333;
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* Glassmorphism */
-.glass-panel {
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-}
-
-/* Custom Scrollbar Utility */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #222 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
-
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #222;
-  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Animations */
+/* ─── Hide scrollbar ───────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Glass Panel ──────────────────────────────────────────────────── */
+.glass-panel {
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+
+/* ─── Surface Cards ────────────────────────────────────────────────── */
+.surface-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+.surface-card:hover {
+  border-color: var(--border-default);
+  background: var(--surface-3);
+}
+
+/* ─── Premium Glow Effects ─────────────────────────────────────────── */
+.glow-blue { box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.15); }
+.glow-green { box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.15); }
+.glow-orange { box-shadow: 0 0 20px -5px rgba(249, 115, 22, 0.15); }
+.glow-purple { box-shadow: 0 0 20px -5px rgba(139, 92, 246, 0.15); }
+.glow-red { box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.15); }
+.glow-primary { box-shadow: 0 0 20px -5px rgba(227, 24, 55, 0.15); }
+
+/* ─── Noise Texture (subtle) ───────────────────────────────────────── */
+.noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ─── Smooth Animations ────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+
+/* ─── Premium Input Styling ────────────────────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
 }
 
-/* Hide scrollbar for smooth internal scroll areas */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  -webkit-appearance: none;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+/* ─── Focus Ring ───────────────────────────────────────────────────── */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--border-focus);
 }
