@@ -180,8 +180,31 @@ export const initialMeetings: Meeting[] = [
 
 // ─── ACADEMY DATA ──────────────────────────────────────────────────────────────
 export const academyTracks: CourseTrack[] = [
-  { id: 1, img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=2070&auto=format&fit=crop', title: 'Onboarding', duration: '2h 30m', videos: 5 },
-  { id: 2, img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop', title: 'Gestão de Comercial', duration: '5h 15m', videos: 12 },
+  { 
+    id: 1, 
+    img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=2070&auto=format&fit=crop', 
+    title: 'Onboarding', 
+    duration: '2h 30m', 
+    videos: 5,
+    lessons: [
+      { id: 'l1-1', title: 'Boas vindas à Agência', duration: '15m', type: 'video' },
+      { id: 'l1-2', title: 'Nossa cultura e valores', duration: '45m', type: 'video' },
+      { id: 'l1-3', title: 'Ferramentas de trabalho', type: 'text', content: '# Nossas Ferramentas\nUtilizamos o Slack, o WhatsApp e nosso próprio LINE OS.' },
+      { id: 'l1-4', title: 'Processos de aprovação', duration: '30m', type: 'both', content: 'Sempre exija aprovação formal do cliente.' },
+      { id: 'l1-5', title: 'Seu primeiro projeto', duration: '60m', type: 'video' },
+    ]
+  },
+  { 
+    id: 2, 
+    img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop', 
+    title: 'Gestão de Comercial', 
+    duration: '5h 15m', 
+    videos: 12,
+    lessons: [
+      { id: 'l2-1', title: 'Como prospectar', duration: '1h', type: 'video' },
+      { id: 'l2-2', title: 'Fechamento matador', duration: '2h', type: 'video' }
+    ]
+  },
   { id: 3, img: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974&auto=format&fit=crop', title: 'Design & Criativos', duration: '3h 45m', videos: 8 },
   { id: 4, img: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop', title: 'Atendimento Pró', duration: '1h 20m', videos: 3 },
 ];

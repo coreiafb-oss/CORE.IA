@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Play, Image as ImageIcon, FileText, CheckCircle2, MessageSquare, Calendar, X, Plus, Upload, Trash2, MessageCircle, Music, Download } from 'lucide-react';
+import { Play, Image as ImageIcon, FileText, CheckCircle2, MessageSquare, Calendar, X, Plus, Upload, Trash2, MessageCircle, Music, Download, Link as LinkIcon, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import useEscapeKey from '../hooks/useEscapeKey';
@@ -314,6 +314,15 @@ const AprovacaoConteudo = () => {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/cliente/aprovacao`);
+                showToast('Link do cliente copiado para a área de transferência!', 'success');
+              }}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-all border border-zinc-700"
+            >
+              <LinkIcon className="w-4 h-4" /> Link do Cliente
+            </button>
             <button
               onClick={() => setShowNovoModal(true)}
               className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-[13px] font-medium flex items-center gap-2 transition-all shadow-lg shadow-red-500/20"

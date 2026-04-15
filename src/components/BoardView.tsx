@@ -3,6 +3,7 @@ import { Plus, MoreHorizontal, Flag, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { Task } from '../types';
+import { TaskModal } from './ui/TaskModal';
 
 const priorityConfig: Record<string, { color: string; label: string }> = {
   Urgent: { color: '#ef4444', label: 'Urgente' },
@@ -22,6 +23,7 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
   const { setTasks, taskStatuses, addTask } = useAppContext();
   const [newTaskName, setNewTaskName] = useState('');
   const [addingToColumn, setAddingToColumn] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const dragItem = useRef<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const isFiltering = !!searchQuery || !!filterPriority;
@@ -132,7 +134,10 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
                         />
                       )}
 
-                      <div className="flex items-start justify-between gap-2">
+                      <div 
+                        className="flex items-start justify-between gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setSelectedTask(task)}
+                      >
                         <span className="text-sm text-gray-200 font-medium leading-snug flex-1">
                           {task.name}
                         </span>
@@ -250,6 +255,15 @@ const BoardView = ({ filteredTasks, searchQuery, filterPriority }: BoardViewProp
           </div>
         );
       })}
+
+      {/* Task Modal */}
+      {selectedTask && (
+        <TaskModal
+          task={filteredTasks.find(t => t.id === selectedTask.id) || selectedTask}
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import BoardView from './BoardView';
 import CalendarView from './CalendarView';
 import ClientBoardView from './ClientBoardView';
 import SettingsModal from './SettingsModal';
+import TaskDashboard from './TaskDashboard';
 import { ViewType } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { Modal } from './ui/Modal';
@@ -120,6 +121,7 @@ const ClickUpInterface = () => {
         />
         <div className="flex-1 overflow-auto custom-scrollbar relative">
           {currentView === 'overview' && <Overview />}
+          {currentView === 'task-dashboard' && <TaskDashboard />}
           {currentView === 'tasks' && (
             <ListView
               filteredTasks={filteredTasks}

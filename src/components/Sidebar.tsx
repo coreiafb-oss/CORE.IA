@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Home, Inbox, CheckSquare, Clock, MoreHorizontal, Plus, Search, ChevronDown, ChevronRight, Folder as FolderIcon, Users, List } from 'lucide-react';
+import { Home, Inbox, CheckSquare, Clock, MoreHorizontal, Plus, Search, ChevronDown, ChevronRight, Folder as FolderIcon, Users, List, BarChart3 } from 'lucide-react';
 import { ViewType } from '../types';
 import { useAppContext } from '../context/AppContext';
 
@@ -71,6 +71,7 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
           onClick={() => onViewChange('tasks')}
           active={currentView === 'tasks' || currentView === 'board' || currentView === 'calendar'}
         />
+        <NavItem icon={<BarChart3 className="w-4 h-4" />} label="Dashboard" onClick={() => onViewChange('task-dashboard')} active={currentView === 'task-dashboard'} />
       </div>
 
       {/* Spaces */}

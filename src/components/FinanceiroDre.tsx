@@ -239,6 +239,14 @@ const FinanceiroDre = () => {
 
   const chartData = useMemo(() => buildChartData(transactions), [transactions]);
 
+  const receitasBrutas = totalReceitas;
+  const impostos = receitasBrutas * 0.12; // 12% mock de imposto (DAS, etc.)
+  const receitaLiquida = receitasBrutas - impostos;
+  const custosServicos = totalDespesas * 0.4; // Exemplo: Freelancers, Softwares específicos de projetos
+  const lucroBruto = receitaLiquida - custosServicos;
+  const despesasOperacionais = totalDespesas * 0.6; // Exemplo: Escritório, Salários fixos
+  const ebitda = lucroBruto - despesasOperacionais; // Lucro Operacional
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -440,6 +448,45 @@ const FinanceiroDre = () => {
               </AnimatePresence>
             </div>
           </div>
+        </div>
+
+        {/* DRE Analítico (Table) */}
+        <div className="mt-6 bg-[#141414] border border-[#222] rounded-xl p-6 mb-6">
+           <h3 className="text-sm font-semibold mb-4">DRE Analítico Resumido (Simulado)</h3>
+           <div className="overflow-x-auto">
+             <table className="w-full text-left">
+               <tbody className="divide-y divide-[#222]">
+                 <tr className="hover:bg-white/5 transition-colors">
+                   <td className="py-3 px-4 text-sm text-gray-400">Receita Bruta (Vendas)</td>
+                   <td className="py-3 px-4 text-sm font-medium text-white text-right">R$ {receitasBrutas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className="hover:bg-white/5 transition-colors text-red-400">
+                   <td className="py-3 px-4 text-sm">(-) Impostos sobre Serviço (Simulado 12%)</td>
+                   <td className="py-3 px-4 text-sm font-medium text-right">- R$ {impostos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className="hover:bg-white/5 transition-colors bg-white/5 font-bold">
+                   <td className="py-3 px-4 text-sm text-white">(=) Receita Líquida</td>
+                   <td className="py-3 px-4 text-sm text-white text-right">R$ {receitaLiquida.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className="hover:bg-white/5 transition-colors text-red-400">
+                   <td className="py-3 px-4 text-sm">(-) Custos de Serviços Prestados (CMV)</td>
+                   <td className="py-3 px-4 text-sm font-medium text-right">- R$ {custosServicos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className="hover:bg-white/5 transition-colors bg-white/5 font-bold">
+                   <td className="py-3 px-4 text-sm text-white">(=) Lucro Bruto</td>
+                   <td className="py-3 px-4 text-sm text-white text-right">R$ {lucroBruto.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className="hover:bg-white/5 transition-colors text-red-400">
+                   <td className="py-3 px-4 text-sm">(-) Despesas Operacionais / Fixas</td>
+                   <td className="py-3 px-4 text-sm font-medium text-right">- R$ {despesasOperacionais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+                 <tr className={`hover:bg-white/5 transition-colors border-t-2 border-[#444] font-bold ${ebitda >= 0 ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                   <td className="py-4 px-4 text-sm">(=) Lucro Operacional (EBITDA)</td>
+                   <td className="py-4 px-4 text-sm text-right">R$ {ebitda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                 </tr>
+               </tbody>
+             </table>
+           </div>
         </div>
       </div>
 

@@ -17,7 +17,7 @@ import useEscapeKey from '../hooks/useEscapeKey';
 import { useToast } from './Toast';
 import { useAppContext } from '../context/AppContext';
 import { Modal } from './ui/Modal';
-import { LeadDrawer } from './LeadDrawer';
+import { LeadModal } from './LeadModal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Column {
@@ -547,13 +547,13 @@ const CrmVendas = () => {
 
       <AnimatePresence>
         {drawerLead && (
-          <LeadDrawer
+          <LeadModal
             isOpen={!!drawerLead}
             onClose={() => setDrawerLead(null)}
             lead={drawerLead}
             onUpdate={(id, updates) => {
               updateLeadDetails(id, updates);
-              // Also update the local state to reflect changes instantly in the drawer view
+              // Also update the local state to reflect changes instantly in the modal view
               setDrawerLead(prev => prev ? { ...prev, ...updates } : null);
             }}
           />

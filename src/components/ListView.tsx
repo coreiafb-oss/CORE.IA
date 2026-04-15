@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { useToast } from './Toast';
 import { Task } from '../types';
+import { TaskModal } from './ui/TaskModal';
 
 interface ListViewProps {
   filteredTasks: Task[];
@@ -22,6 +23,7 @@ const ListView = ({ filteredTasks, searchQuery, filterPriority }: ListViewProps)
   const [moveMenuTaskId, setMoveMenuTaskId] = useState<string | null>(null);
   const [addingNewStatus, setAddingNewStatus] = useState(false);
   const [newStatusName, setNewStatusName] = useState('');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close menu on outside click
@@ -224,8 +226,8 @@ const ListView = ({ filteredTasks, searchQuery, filterPriority }: ListViewProps)
                             />
                           ) : (
                             <span
-                              className="text-[13px] text-gray-200 font-medium cursor-pointer transition-colors truncate"
-                              onClick={() => setEditingTask({ id: task.id, field: 'name' })}
+                              className="text-[13px] text-gray-200 font-medium cursor-pointer hover:text-white transition-colors truncate hover:underline decoration-dotted underline-offset-2"
+                              onClick={() => setSelectedTask(task)}
                             >
                               {task.name}
                             </span>
@@ -452,6 +454,15 @@ const ListView = ({ filteredTasks, searchQuery, filterPriority }: ListViewProps)
       </div>
 
       <ToastContainer />
+
+      {/* Task Modal */}
+      {selectedTask && (
+        <TaskModal
+          task={tasks.find(t => t.id === selectedTask.id) || selectedTask}
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   );
 };

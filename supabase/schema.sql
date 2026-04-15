@@ -42,7 +42,7 @@ END $$;
 
 -- Status de aprovação de conteúdo (mapeia types.ts → ContentStatus)
 DO $$ BEGIN
-  CREATE TYPE content_status AS ENUM ('PENDENTE', 'REVISÃO', 'APROVADO');
+  CREATE TYPE content_status AS ENUM ('PENDENTE', 'REVISÃO', 'ALTERAÇÃO', 'APROVADO');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -87,11 +87,13 @@ COMMENT ON TABLE public.task_statuses IS 'Status possíveis para tarefas do Gest
 CREATE TABLE IF NOT EXISTS public.tasks (
   id            TEXT PRIMARY KEY DEFAULT 't-' || gen_random_uuid()::TEXT,
   name          TEXT NOT NULL,
+  description   TEXT,
   status_id     TEXT NOT NULL REFERENCES public.task_statuses(id) ON DELETE SET DEFAULT,
   assignees     TEXT[] DEFAULT '{}',           -- Array de URLs de avatar
   due_date      TEXT,                          -- String livre ('4 dias atrás', '2024-04-01')
   priority      task_priority DEFAULT 'None'::task_priority NOT NULL,
   tags          JSONB DEFAULT '[]'::JSONB,     -- [{ name, color, bgColor }]
+  related_task_ids TEXT[] DEFAULT '{}',
   sort_order    INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
@@ -153,6 +155,14 @@ CREATE TABLE IF NOT EXISTS public.crm_leads (
   title         TEXT NOT NULL,
   value         NUMERIC(12,2) NOT NULL DEFAULT 0,
   date          TEXT NOT NULL,                 -- ISO date string
+  contact_name  TEXT,
+  email         TEXT,
+  phone         TEXT,
+  company_name  TEXT,
+  company_email TEXT,
+  company_phone TEXT,
+  company_cnpj  TEXT,
+  company_address TEXT,
   sort_order    INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
@@ -192,6 +202,7 @@ CREATE TABLE IF NOT EXISTS public.content_items (
   thumbnail     TEXT DEFAULT 'N',              -- 'N', 'img', 'pdf'
   color         TEXT DEFAULT 'from-red-900 to-black', -- CSS gradient classes
   text_color    TEXT DEFAULT 'text-red-600',
+  linked_task_id TEXT REFERENCES public.tasks(id) ON DELETE SET NULL,
   sort_order    INTEGER DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()

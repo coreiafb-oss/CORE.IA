@@ -83,14 +83,15 @@ export const useToast = () => {
 
   const ToastContainer = useCallback(
     () => (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {toast && (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            onUndo={toast.onUndo}
-            onDismiss={hideToast}
-          />
+          <React.Fragment key={toast.id}>
+            <Toast
+              message={toast.message}
+              onUndo={toast.onUndo}
+              onDismiss={hideToast}
+            />
+          </React.Fragment>
         )}
       </AnimatePresence>
     ),

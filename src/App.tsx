@@ -13,6 +13,7 @@ import Dashboard from './components/Dashboard';
 import LoginPage from './components/LoginPage';
 import LineLogo from './components/LineLogo';
 import { useAuth } from './context/AuthContext';
+import ApprovalClientView from './components/ApprovalClientView';
 
 function App() {
   const { session, isAuthLoading } = useAuth();
@@ -56,6 +57,11 @@ function App() {
         return <div className="p-8 text-white">Em desenvolvimento...</div>;
     }
   };
+
+  // Check public routes before Auth
+  if (window.location.pathname.startsWith('/cliente/aprovacao')) {
+    return <ApprovalClientView />;
+  }
 
   // Auth loading state
   if (isAuthLoading) {

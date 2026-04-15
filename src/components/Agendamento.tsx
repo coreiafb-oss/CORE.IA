@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, Users, Video, Plus, X, ChevronLeft, ChevronRight, Trash2, MapPin, ArrowRight, Search } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users, Video, Plus, X, ChevronLeft, ChevronRight, Trash2, MapPin, ArrowRight, Search, Table, Grid } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import useEscapeKey from '../hooks/useEscapeKey';
@@ -29,179 +29,13 @@ const getPlatformColor = (platform: string) => {
   return { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-400' };
 };
 
-// ─── Drawer: Nova Reunião ────────────────────────────────────────────────────
-interface NovaReuniaoDrawerProps {
-  onAdd: (meeting: Omit<Meeting, 'id'>) => void;
-  onClose: () => void;
-  initialDate?: string;
-}
-
-const NovaReuniaoDrawer = ({ onAdd, onClose, initialDate }: NovaReuniaoDrawerProps) => {
-  const [form, setForm] = useState({
-    title: '',
-    date: initialDate || formatDate(new Date()),
-    time: '14:00',
-    duration: '60',
-    client: '',
-    platform: 'Google Meet'
-  });
-
-  useEscapeKey(onClose);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.title.trim() || !form.date || !form.time) return;
-
-    const [hours, mins] = form.time.split(':').map(Number);
-    const end = new Date(0, 0, 0, hours, mins + parseInt(form.duration));
-    const timeStr = `${form.time} - ${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
-    const isToday = form.date === formatDate(new Date());
-
-    onAdd({
-      title: form.title,
-      date: form.date,
-      time: timeStr,
-      client: form.client || 'Interno',
-      platform: form.platform,
-      isToday
-    });
-  };
-
-  return (
-    <AnimatePresence>
-      <motion.div 
-        key="backdrop"
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }} 
-        className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <motion.div
-          key="drawer"
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
-          className="w-full max-w-[480px] h-full bg-[#0a0a0a]/95 border-l border-white/5 shadow-2xl flex flex-col"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Header Drawer */}
-          <div className="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-br from-white/[0.02] to-transparent">
-            <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Novo Agendamento</h2>
-              <p className="text-sm text-gray-400 mt-1">Preencha os detalhes do seu compromisso.</p>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6">
-            <div className="space-y-4">
-              {/* Título */}
-              <div className="group">
-                <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Assunto / Título</label>
-                <input
-                  type="text" required autoFocus
-                  value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all shadow-inner"
-                  placeholder="Ex: Kickoff com Diretoria"
-                />
-              </div>
-
-              {/* Data e Hora */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="group">
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Data</label>
-                  <input
-                    type="date" required
-                    value={form.date}
-                    onChange={e => setForm({ ...form, date: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all [color-scheme:dark] shadow-inner"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="group">
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Hora</label>
-                    <input
-                      type="time" required
-                      value={form.time}
-                      onChange={e => setForm({ ...form, time: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all [color-scheme:dark] shadow-inner"
-                    />
-                  </div>
-                  <div className="group">
-                    <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Duração</label>
-                    <select
-                      value={form.duration}
-                      onChange={e => setForm({ ...form, duration: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-2 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all appearance-none cursor-pointer shadow-inner"
-                    >
-                      <option value="15">15 min</option>
-                      <option value="30">30 min</option>
-                      <option value="60">1 H</option>
-                      <option value="90">1.5 H</option>
-                      <option value="120">2 H</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cliente e Plataforma */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-white-[0.02] to-[#111] border border-white/5 space-y-4 shadow-sm">
-                <div className="group">
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Cliente / Contato</label>
-                  <div className="relative">
-                    <Users className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 transition-colors" />
-                    <input
-                      type="text"
-                      value={form.client}
-                      onChange={e => setForm({ ...form, client: e.target.value })}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all placeholder-gray-600"
-                      placeholder="Nome do cliente ou empresa"
-                    />
-                  </div>
-                </div>
-                <div className="group">
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider group-focus-within:text-orange-500 transition-colors">Local / Link</label>
-                  <div className="relative">
-                    <Video className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 transition-colors" />
-                    <input
-                      type="text"
-                      value={form.platform}
-                      onChange={e => setForm({ ...form, platform: e.target.value })}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:bg-orange-500/5 transition-all placeholder-gray-600"
-                      placeholder="Google Meet, Zoom ou Endereço"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Form */}
-            <div className="mt-auto pt-6 flex gap-3">
-              <button type="button" onClick={onClose} className="flex-1 py-3 text-sm font-semibold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all">
-                Cancelar
-              </button>
-              <button type="submit" className="flex-[2] py-3 text-sm font-bold text-white bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)] rounded-xl transition-all flex justify-center items-center gap-2">
-                Agendar Compromisso
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
+import { EventModal } from './EventModal';
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 const Agendamento = () => {
   const { meetings, setMeetings, addMeeting } = useAppContext();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(formatDate(new Date()));
@@ -306,17 +140,34 @@ const Agendamento = () => {
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">
-              Agendamentos
+              Agendamentos & Equipe de Gravação
             </h1>
-            <p className="text-zinc-500 text-[13px]">Visualize e coordene as próximas calls e reuniões estratégicas.</p>
+            <p className="text-zinc-500 text-[13px]">Visualize e coordene as próximas calls, reuniões e roteiros de captação.</p>
           </div>
-          <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-lg shadow-red-500/20 transition-all"
-          >
-            <CalendarIcon className="w-4 h-4" /> 
-            <span>Agendar Call</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* View Toggles */}
+            <div className="flex bg-[#141414] p-1 rounded-xl border border-white/5 shadow-inner">
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-[13px] font-medium transition-all ${viewMode === 'calendar' ? 'bg-[#2a2a2a] text-white shadow-md border border-white/10' : 'text-gray-400 hover:text-white'}`}
+              >
+                <Grid className="w-4 h-4" /> Grade
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 text-[13px] font-medium transition-all ${viewMode === 'table' ? 'bg-[#2a2a2a] text-white shadow-md border border-white/10' : 'text-gray-400 hover:text-white'}`}
+              >
+                <Table className="w-4 h-4" /> Planilha
+              </button>
+            </div>
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-lg shadow-red-500/20 transition-all"
+            >
+              <CalendarIcon className="w-4 h-4" /> 
+              <span>Agendar Call</span>
+            </button>
+          </div>
         </div>
 
         {/* Dashboard Cards (KPIs) */}
@@ -347,9 +198,10 @@ const Agendamento = () => {
         </div>
 
         {/* Content Area flex */}
-        <div className="flex gap-6 flex-1 overflow-hidden min-h-0 relative">
-          
-          {/* Main Calendar View (Glassmorphic Window) */}
+        {viewMode === 'calendar' && (
+          <div className="flex gap-6 flex-1 overflow-hidden min-h-0 relative">
+            
+            {/* Main Calendar View (Glassmorphic Window) */}
           <div className="flex-1 rounded-3xl bg-[#111]/70 backdrop-blur-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl relative z-10">
             {/* Header Calendário */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
@@ -554,9 +406,100 @@ const Agendamento = () => {
             </div>
           </div>
         </div>
+        )}
+
+        {viewMode === 'table' && (
+          /* Table / Spreadsheet View */
+          <div className="flex-1 bg-[#111]/70 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col min-h-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40">
+               <div>
+                  <h2 className="text-lg font-bold text-white tracking-tight">Registro de Produção e Agendas</h2>
+                  <p className="text-xs text-gray-500">Histórico de compromissos em formato tabela</p>
+               </div>
+               <div className="relative w-64">
+                 <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                 <input
+                   type="text"
+                   value={searchQuery}
+                   onChange={e => setSearchQuery(e.target.value)}
+                   placeholder="Buscar reuniões..."
+                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 transition-all placeholder-gray-600"
+                 />
+               </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-[#1a1a1a] sticky top-0 z-10 shadow-md">
+                  <tr>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/10">Data & Hora</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/10">Título / Projeto</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/10">Cliente / Videomaker</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/10">Local / Plataforma</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-white/10 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {timelineMeetings.map((m) => {
+                     const colors = getPlatformColor(m.platform);
+                     return (
+                      <tr key={m.id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center">
+                                 <span className="text-[10px] font-bold text-orange-500">{m.date.split('-')[1] || m.date.substring(0,3)}</span>
+                                 <span className="text-xs font-bold text-gray-300">{m.date.split('-')[2] || m.date.substring(0,2)}</span>
+                              </div>
+                              <div>
+                                 <div className="text-sm font-semibold text-white">{m.time.split('-')[0].trim()}</div>
+                                 <div className="text-[10px] text-gray-500 font-medium mt-0.5">{m.time}</div>
+                              </div>
+                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                           <div className="font-bold text-sm text-gray-200 group-hover:text-orange-400 transition-colors cursor-pointer">{m.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                           <div className="flex items-center gap-2 text-sm text-gray-400 font-medium">
+                              <Users className="w-4 h-4" /> {m.client || 'Interno'}
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold ${colors.bg} ${colors.text} border border-transparent group-hover:border-white/5`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
+                              {m.platform}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                           <button 
+                             onClick={() => handleDelete(m.id)}
+                             className="p-2 bg-white/5 rounded-lg text-gray-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                             title="Remover Registro"
+                           >
+                              <Trash2 className="w-4 h-4" />
+                           </button>
+                        </td>
+                      </tr>
+                     )
+                  })}
+                  {timelineMeetings.length === 0 && (
+                     <tr>
+                        <td colSpan={5} className="px-6 py-16 text-center text-gray-500">
+                           <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                           <p className="text-sm font-medium">Nenhum registro encontrado.</p>
+                        </td>
+                     </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
-      {isDrawerOpen && <NovaReuniaoDrawer onAdd={handleAddMeeting} onClose={() => setIsDrawerOpen(false)} initialDate={selectedDateStr || undefined} />}
+      <AnimatePresence>
+        {isDrawerOpen && <EventModal onAdd={handleAddMeeting} onClose={() => setIsDrawerOpen(false)} initialDate={selectedDateStr || undefined} />}
+      </AnimatePresence>
       <ToastContainer />
     </motion.div>
   );
