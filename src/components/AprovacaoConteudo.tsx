@@ -8,6 +8,7 @@ import { ContentType, ContentStatus, ContentItem } from '../types';
 import { Modal } from './ui/Modal';
 import { ContentDetailModal } from './ContentDetailModal';
 import { ContentCalendarView } from './ContentCalendarView';
+import { supabase } from '../lib/supabase';
 
 // ─── Helpers de Data ──────────────────────────────────────────────────────────
 const toDisplayDate = (iso: string) => {
@@ -112,6 +113,8 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
     clientEmail: ''
   });
   const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { showToast } = useToast();
   useEscapeKey(onClose);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,11 +123,12 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !form.date) return;
     
-    const fileUrl = URL.createObjectURL(file);
+    setIsUploading(true);
+    let finalUrl = URL.createObjectURL(file); // Fallback local instantâneo
     let determinedType: ContentType = 'video'; 
     
     if (file.type.startsWith('audio/')) determinedType = 'audio';
@@ -132,6 +136,28 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
     else if (file.type.startsWith('video/')) determinedType = 'video';
     else if (file.type.includes('pdf')) determinedType = 'pdf';
     
+    try {
+      if (supabase) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage.from('conteudos').upload(filePath, file);
+
+        if (!uploadError) {
+          const { data } = supabase.storage.from('conteudos').getPublicUrl(filePath);
+          finalUrl = data.publicUrl;
+        } else {
+          console.error("Erro no upload:", uploadError);
+          showToast("Erro ao fazer upload. Usando versão local temporária.", "error");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
+
     const meta = colorMap[determinedType];
     
     onAdd({
@@ -146,7 +172,7 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
       caption: form.caption,
       clientEmail: form.clientEmail,
       feedback: null,
-      fileUrl,
+      fileUrl: finalUrl,
       ...meta,
     });
   };
@@ -250,11 +276,12 @@ const NovoConteudoModal = ({ onAdd, onClose }: { onAdd: (item: Omit<ContentItem,
               />
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
-            <button type="button" onClick={onClose} className="px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+            <button type="button" onClick={onClose} disabled={isUploading} className="px-4 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-50">
               Cancelar
             </button>
-            <button type="submit" className="bg-gradient-to-r from-primary to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <Upload className="w-4 h-4" /> Enviar Arquivo
+            <button type="submit" disabled={isUploading} className="bg-gradient-to-r from-primary to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)] disabled:opacity-50">
+              {isUploading ? <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> : <Upload className="w-4 h-4" />}
+              {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
             </button>
           </div>
         </form>
