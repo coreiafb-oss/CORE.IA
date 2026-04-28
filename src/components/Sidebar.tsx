@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { Home, Inbox, CheckSquare, Clock, MoreHorizontal, Plus, Search, ChevronDown, ChevronRight, Folder as FolderIcon, Users, List, BarChart3 } from 'lucide-react';
-import { ViewType } from '../types';
+import { ViewType, Client } from '../types';
 import { useAppContext } from '../context/AppContext';
 
 interface SidebarProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
+  onOpenClientDetails?: (client: Client) => void;
 }
 
-const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
+const Sidebar = ({ currentView, onViewChange, onOpenClientDetails }: SidebarProps) => {
   const { tasks, clients } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [space1Open, setSpace1Open] = useState(true);
@@ -122,7 +123,13 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
                             ? 'text-gray-400 hover:bg-[#2b2b2b] hover:text-gray-200'
                             : 'text-gray-400 hover:bg-[#2b2b2b] hover:text-gray-200'
                         }`}
-                        onClick={() => onViewChange('tasks')}
+                        onClick={() => {
+                          if (onOpenClientDetails) {
+                            onOpenClientDetails(client);
+                          } else {
+                            onViewChange('tasks');
+                          }
+                        }}
                       >
                         <List className="w-4 h-4 text-gray-400" />
                         <span className="text-sm font-medium truncate w-32" title={client.name}>{client.name}</span>

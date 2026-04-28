@@ -9,13 +9,15 @@ import CalendarView from './CalendarView';
 import ClientBoardView from './ClientBoardView';
 import SettingsModal from './SettingsModal';
 import TaskDashboard from './TaskDashboard';
-import { ViewType } from '../types';
+import { ViewType, Client } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { Modal } from './ui/Modal';
+import { ClientDetailModal } from './ClientDetailModal';
 
 const ClickUpInterface = () => {
-  const { tasks, setTasks, addTask, taskStatuses, clients, addClient, clientStatuses } = useAppContext();
+  const { tasks, setTasks, addTask, taskStatuses, clients, addClient, clientStatuses, updateClient } = useAppContext();
   const [currentView, setCurrentView] = useState<ViewType>('overview');
+  const [selectedClientDetails, setSelectedClientDetails] = useState<Client | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
@@ -107,7 +109,7 @@ const ClickUpInterface = () => {
 
   return (
     <div className="flex h-full w-full font-sans overflow-hidden selection:bg-primary/30" style={{ background: 'var(--surface-1)', color: 'var(--text-secondary)' }}>
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+      <Sidebar currentView={currentView} onViewChange={setCurrentView} onOpenClientDetails={setSelectedClientDetails} />
       <div className="flex-1 flex flex-col min-w-0 bg-[#141414]">
         <TopBar
           currentView={currentView}
@@ -154,6 +156,17 @@ const ClickUpInterface = () => {
         </div>
       </div>
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
+      {selectedClientDetails && (
+        <ClientDetailModal
+          client={selectedClientDetails}
+          onClose={() => setSelectedClientDetails(null)}
+          onUpdate={(updates) => {
+            updateClient(selectedClientDetails.id, updates);
+            setSelectedClientDetails({ ...selectedClientDetails, ...updates });
+          }}
+        />
+      )}
 
       {/* Quick Add Task Modal */}
       <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Nova Tarefa">
