@@ -110,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!supabase) return;
     await supabase.auth.signOut();
     setProfile(null);
+    localStorage.removeItem('line_os_cached_role');
   };
 
   return (
