@@ -77,14 +77,9 @@ export function useTasks(userFullName?: string, userAvatar?: string) {
       } catch (err) {
         if (cancelled) return;
         console.error('[useTasks] Erro ao carregar:', err);
-        setError('Falha ao conectar com o banco de dados. Usando dados locais.');
-        // Fallback gracioso
-        const savedTasks = localStorage.getItem('line_os_tasks_v2');
-        const savedStatuses = localStorage.getItem('line_os_task_statuses');
-        setTasks(savedTasks ? JSON.parse(savedTasks) : initialTasks.map(t => ({
-          ...t, createdAt: new Date().toISOString(), comments: [], attachments: []
-        })));
-        setTaskStatuses(savedStatuses ? JSON.parse(savedStatuses) : initialStatuses);
+        setError('Falha ao conectar com o banco de dados. Por favor, verifique sua conexão ou se as tabelas do Supabase foram criadas.');
+        setTasks([]);
+        setTaskStatuses(initialStatuses);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -164,12 +159,9 @@ export function useTasks(userFullName?: string, userAvatar?: string) {
       const saved = await createTask(task);
       setTasks(prev => prev.map(t => t.id === tempId ? saved : t));
     } catch (err) {
-      console.error('[useTasks] addTask falhou, mantendo otimista:', err);
-      // Persiste localmente o fallback
-      setTasks(prev => {
-        localStorage.setItem('line_os_tasks_v2', JSON.stringify(prev));
-        return prev;
-      });
+      console.error('[useTasks] addTask falhou, revertendo otimista:', err);
+      // Reverte a atualização otimista
+      setTasks(prev => prev.filter(t => t.id !== tempId));
     }
   }, []);
 

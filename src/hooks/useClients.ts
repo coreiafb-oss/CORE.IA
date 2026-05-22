@@ -30,12 +30,11 @@ export function useClients() {
           setClientStatuses(statusesData.length > 0 ? statusesData : initialClientStatuses);
         }
       } catch (err) {
-        console.error('[useClients] Erro ao carregar:', err);
+        console.error('[useClients] Erro ao carregar do Supabase:', err);
         if (!cancelled) {
-          const savedC = localStorage.getItem('line_os_clients');
-          const savedS = localStorage.getItem('line_os_client_statuses');
-          setClients(savedC ? JSON.parse(savedC) : initialClients);
-          setClientStatuses(savedS ? JSON.parse(savedS) : initialClientStatuses);
+          setClients([]);
+          setClientStatuses(initialClientStatuses);
+          alert('Erro ao carregar Clientes. Verifique a tabela clients.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

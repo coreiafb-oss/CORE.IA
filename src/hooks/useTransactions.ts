@@ -30,10 +30,10 @@ export function useTransactions() {
           setSummary(summaryData);
         }
       } catch (err) {
-        console.error('[useTransactions] Erro ao carregar:', err);
+        console.error('[useTransactions] Erro ao carregar do Supabase:', err);
         if (!cancelled) {
-          const saved = localStorage.getItem('line_os_transactions');
-          setTransactions(saved ? JSON.parse(saved) : initialTransactions);
+          setTransactions([]);
+          alert('Erro ao carregar Transações. Verifique a tabela transactions.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

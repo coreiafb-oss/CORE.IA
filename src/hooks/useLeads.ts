@@ -16,11 +16,11 @@ import type { Lead, CrmColumn, LeadActivity, LeadTask } from '../types';
 import { crmLeads as initialLeads } from '../data';
 
 const DEFAULT_CRM_COLUMNS: CrmColumn[] = [
-  { id: 'leads',    title: 'Leads',             color: 'bg-blue-500',   accent: 'blue'   },
-  { id: 'agendada', title: 'Reunião Agendada',   color: 'bg-primary',    accent: 'purple' },
-  { id: 'proposta', title: 'Proposta Enviada',   color: 'bg-orange-500', accent: 'orange' },
-  { id: 'ganho',    title: 'Fechado (Ganho)',    color: 'bg-green-500',  accent: 'green'  },
-  { id: 'perdido',  title: 'Perdido',            color: 'bg-red-500',    accent: 'red'    },
+  { id: 'leads', title: 'Leads', color: 'bg-blue-500', accent: 'blue' },
+  { id: 'agendada', title: 'Reunião Agendada', color: 'bg-primary', accent: 'purple' },
+  { id: 'proposta', title: 'Proposta Enviada', color: 'bg-orange-500', accent: 'orange' },
+  { id: 'ganho', title: 'Fechado (Ganho)', color: 'bg-green-500', accent: 'green' },
+  { id: 'perdido', title: 'Perdido', color: 'bg-red-500', accent: 'red' },
 ];
 
 function loadCrmColumns(): CrmColumn[] {
@@ -54,10 +54,10 @@ export function useLeads() {
           setLeads(data.length > 0 ? data : initialLeads);
         }
       } catch (err) {
-        console.error('[useLeads] Erro ao carregar:', err);
+        console.error('[useLeads] Erro ao carregar do Supabase:', err);
         if (!cancelled) {
-          const saved = localStorage.getItem('line_os_leads_v2');
-          setLeads(saved ? JSON.parse(saved) : initialLeads);
+          setLeads([]);
+          alert('Erro ao carregar Leads. Verifique a tabela crm_leads.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

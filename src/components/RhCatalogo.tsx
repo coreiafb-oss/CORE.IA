@@ -1,39 +1,96 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Search, Briefcase, DollarSign, Wallet, Phone, Mail, Plus, X, UserCog } from 'lucide-react';
+import { Users, Search, Briefcase, DollarSign, Wallet, Phone, Mail, Plus, X, UserCog, Trash2 } from 'lucide-react';
 import { useToast } from './Toast';
+import { useRh } from '../hooks/useRh';
+import { Modal } from './ui/Modal';
+import useEscapeKey from '../hooks/useEscapeKey';
+import { RhProfile } from '../services/rhService';
 
-type TeamMember = {
-  id: string;
-  name: string;
-  role: string;
-  type: 'CLT' | 'PJ' | 'Freelancer' | 'Sócio';
-  costPerHour: number;
-  costPerDay: number;
-  phone: string;
-  email: string;
-  pix: string;
-  skills: string[];
-  avatar: string;
-};
+const RhFormModal = ({ onClose, onAdd }: { onClose: () => void, onAdd: (p: Omit<RhProfile, 'id'>) => void }) => {
+  useEscapeKey(onClose);
+  const [form, setForm] = useState({
+    name: '', role: '', type: 'Freelancer' as RhProfile['type'], costPerHour: 0, costPerDay: 0,
+    phone: '', email: '', pix: '', skills: ''
+  });
 
-const initialTeam: TeamMember[] = [
-  {
-    id: '1', name: 'Arthur de Moraes', role: 'Diretor Criativo', type: 'Sócio',
-    costPerHour: 150, costPerDay: 1200, phone: '+55 11 99999-9999', email: 'arthur@lineos.com', pix: '000.000.000-00', skills: ['Direção', 'Estratégia'], avatar: 'https://i.pravatar.cc/150?u=1'
-  },
-  {
-    id: '2', name: 'Juliana Costa', role: 'Videomaker / Edição', type: 'Freelancer',
-    costPerHour: 60, costPerDay: 500, phone: '+55 11 98888-8888', email: 'ju.video@gmail.com', pix: 'ju.video@gmail.com', skills: ['Captação', 'Premiere', 'After Effects'], avatar: 'https://i.pravatar.cc/150?u=2'
-  },
-  {
-    id: '3', name: 'Carlos Mendes', role: 'Copywriter', type: 'PJ',
-    costPerHour: 45, costPerDay: 350, phone: '+55 11 97777-7777', email: 'carlos.copy@gmail.com', pix: '11977777777', skills: ['Copywriting', 'SEO'], avatar: 'https://i.pravatar.cc/150?u=3'
-  }
-];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onAdd({
+      name: form.name,
+      role: form.role,
+      type: form.type,
+      costPerHour: Number(form.costPerHour),
+      costPerDay: Number(form.costPerDay),
+      phone: form.phone,
+      email: form.email,
+      pix: form.pix,
+      skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name)}&background=random`
+    });
+  };
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title="Adicionar Colaborador" maxWidth="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Nome Completo</label>
+          <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Cargo principal</label>
+            <input required type="text" value={form.role} onChange={e => setForm({...form, role: e.target.value})} placeholder="Ex: Videomaker" className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Tipo de Contrato</label>
+            <select value={form.type} onChange={e => setForm({...form, type: e.target.value as any})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none">
+              <option value="Freelancer">Freelancer</option>
+              <option value="PJ">PJ</option>
+              <option value="CLT">CLT</option>
+              <option value="Sócio">Sócio</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Custo / Hora</label>
+            <input type="number" min="0" value={form.costPerHour} onChange={e => setForm({...form, costPerHour: Number(e.target.value)})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Diária (8h)</label>
+            <input type="number" min="0" value={form.costPerDay} onChange={e => setForm({...form, costPerDay: Number(e.target.value)})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Telefone / WhatsApp</label>
+            <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Email</label>
+            <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Chave PIX</label>
+          <input type="text" value={form.pix} onChange={e => setForm({...form, pix: e.target.value})} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Habilidades (separadas por vírgula)</label>
+          <input type="text" value={form.skills} onChange={e => setForm({...form, skills: e.target.value})} placeholder="Ex: Premiere, Fotografia, Copy" className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+        </div>
+        <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancelar</button>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-sm font-medium transition-colors">Salvar Perfil</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
 
 const RhCatalogo = () => {
-  const [team, setTeam] = useState<TeamMember[]>(initialTeam);
+  const { team, isLoading, addProfile, removeProfile } = useRh();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('TODOS');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -44,6 +101,8 @@ const RhCatalogo = () => {
     const passSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.role.toLowerCase().includes(searchQuery.toLowerCase());
     return passType && passSearch;
   });
+
+  if (isLoading) return <div className="p-8 text-white">Carregando catálogo de RH...</div>;
 
   return (
     <motion.div
@@ -81,7 +140,7 @@ const RhCatalogo = () => {
               <option value="Freelancer">Freelancers</option>
             </select>
             <button
-              onClick={() => { setShowAddModal(true); showToast('Formulário em desenvolvimento...'); setShowAddModal(false); }}
+              onClick={() => setShowAddModal(true)}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-[13px] font-medium flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20 whitespace-nowrap"
             >
               <Plus className="w-4 h-4" /> Adicionar
@@ -130,9 +189,20 @@ const RhCatalogo = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#111] border border-[#222] rounded-2xl p-6 flex flex-col group hover:border-[#444] transition-all hover:shadow-2xl hover:shadow-black/50"
+                className="bg-[#111] border border-[#222] rounded-2xl p-6 flex flex-col group hover:border-[#444] transition-all hover:shadow-2xl hover:shadow-black/50 relative"
               >
-                <div className="flex items-start justify-between mb-4">
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Deseja remover ${member.name}?`)) {
+                      removeProfile(member.id);
+                      showToast('Perfil removido.');
+                    }
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-red-500/20 text-gray-500 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-500/30"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <div className="flex items-start justify-between mb-4 pr-10">
                   <div className="flex items-center gap-4">
                     <img src={member.avatar} alt={member.name} className="w-12 h-12 rounded-full object-cover border-2 border-[#333]" />
                     <div>
@@ -140,6 +210,9 @@ const RhCatalogo = () => {
                       <p className="text-sm text-gray-400">{member.role}</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-4">
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${
                     member.type === 'Freelancer' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
                     member.type === 'PJ' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
@@ -163,19 +236,19 @@ const RhCatalogo = () => {
 
                 <div className="flex flex-col gap-2 mt-auto">
                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Phone className="w-4 h-4" /> <span className="truncate">{member.phone}</span>
+                      <Phone className="w-4 h-4" /> <span className="truncate">{member.phone || 'Não informado'}</span>
                    </div>
                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Mail className="w-4 h-4" /> <span className="truncate">{member.email}</span>
+                      <Mail className="w-4 h-4" /> <span className="truncate">{member.email || 'Não informado'}</span>
                    </div>
                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Wallet className="w-4 h-4" /> <span className="truncate font-mono text-xs mt-0.5">{member.pix}</span>
+                      <Wallet className="w-4 h-4" /> <span className="truncate font-mono text-xs mt-0.5">{member.pix || 'Sem chave PIX'}</span>
                    </div>
                 </div>
                 
                 <div className="mt-4 pt-4 border-t border-white/5 flex gap-1.5 overflow-x-auto custom-scrollbar pb-1">
-                   {member.skills.map(s => (
-                      <span key={s} className="bg-white/5 border border-white/10 text-[10px] font-medium text-gray-300 px-2 py-1 rounded whitespace-nowrap">
+                   {member.skills && member.skills.map((s, idx) => (
+                      <span key={idx} className="bg-white/5 border border-white/10 text-[10px] font-medium text-gray-300 px-2 py-1 rounded whitespace-nowrap">
                          {s}
                       </span>
                    ))}
@@ -191,6 +264,10 @@ const RhCatalogo = () => {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showAddModal && <RhFormModal onClose={() => setShowAddModal(false)} onAdd={(p) => { addProfile(p); setShowAddModal(false); showToast('Perfil adicionado com sucesso!'); }} />}
+      </AnimatePresence>
       <ToastContainer />
     </motion.div>
   );

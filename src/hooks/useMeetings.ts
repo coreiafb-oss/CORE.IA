@@ -26,10 +26,10 @@ export function useMeetings() {
           setMeetings(data.length > 0 ? data : initialMeetings);
         }
       } catch (err) {
-        console.error('[useMeetings] Erro ao carregar:', err);
+        console.error('[useMeetings] Erro ao carregar do Supabase:', err);
         if (!cancelled) {
-          const saved = localStorage.getItem('line_os_meetings');
-          setMeetings(saved ? JSON.parse(saved) : initialMeetings);
+          setMeetings([]);
+          alert('Erro ao carregar Reuniões. Verifique a tabela meetings.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

@@ -25,10 +25,10 @@ export function useContent() {
           setContentItems(data.length > 0 ? data : initialContent);
         }
       } catch (err) {
-        console.error('[useContent] Erro ao carregar:', err);
+        console.error('[useContent] Erro ao carregar do Supabase:', err);
         if (!cancelled) {
-          const saved = localStorage.getItem('line_os_content');
-          setContentItems(saved ? JSON.parse(saved) : initialContent);
+          setContentItems([]);
+          alert('Erro ao carregar conteúdos. Verifique se a tabela content_items existe no Supabase.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -63,7 +63,8 @@ export function useContent() {
       // Preserva o fileUrl original do upload local caso o banco não retorne ainda (blob:)
       setContentItems(prev => prev.map(i => i.id === tempId ? { ...saved, fileUrl: saved.fileUrl || item.fileUrl } : i));
     } catch (err) {
-      console.error('[useContent] addContentItem falhou:', err);
+      console.error('[useContent] addContentItem falhou, revertendo otimista:', err);
+      setContentItems(prev => prev.filter(i => i.id !== tempId));
     }
   }, []);
 

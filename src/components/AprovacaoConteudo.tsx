@@ -159,6 +159,7 @@ const NovoConteudoModal = ({
   initialData?: ContentItem;
   onClose: () => void; 
 }) => {
+  const { clients } = useAppContext();
   const isEditing = !!initialData;
   const [form, setForm] = useState({
     title: initialData?.title || '',
@@ -264,6 +265,22 @@ const NovoConteudoModal = ({
   return (
     <Modal isOpen={true} onClose={onClose} title={isEditing ? "Editar Mídia" : "Adicionar Mídia (Upload)"} maxWidth="max-w-md">
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
+            Cliente Vinculado *
+          </label>
+          <select
+            required
+            value={form.clientEmail}
+            onChange={e => setForm({ ...form, clientEmail: e.target.value })}
+            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+          >
+            <option value="">Selecione um cliente...</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.name.toLowerCase().replace(/\s/g, '') + '@email.com'}>{c.name}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">
             {isEditing ? 'Substituir Arquivo (Opcional)' : 'Selecione o Arquivo'}
@@ -647,8 +664,18 @@ const AprovacaoConteudo = () => {
                     <div className="mt-auto pt-4 flex flex-col gap-3">
                       {content.status === 'APROVADO' ? (
                         <div className="flex flex-col gap-2">
-                          <button disabled className="w-full py-2.5 rounded-xl text-sm font-medium bg-green-500/10 text-green-400 border border-green-500/20 flex items-center justify-center gap-2">
-                            <CheckCircle2 className="w-4 h-4" /> Aprovado
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Tem certeza que deseja retirar a aprovação deste conteúdo?')) {
+                                updateContentStatus(content.id, 'PENDENTE', null);
+                                showToast('Aprovação retirada com sucesso.');
+                              }
+                            }}
+                            className="w-full py-2.5 rounded-xl text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                            title="Toque para retirar aprovação"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Aprovado (Desfazer)
                           </button>
                         </div>
                       ) : (
