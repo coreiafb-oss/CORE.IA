@@ -1,37 +1,45 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Search, Briefcase, DollarSign, Wallet, Phone, Mail, Plus, X, UserCog, Trash2 } from 'lucide-react';
+import { Users, Search, Briefcase, DollarSign, Wallet, Phone, Mail, Plus, X, UserCog, Trash2, Camera, Edit2, Loader2 } from 'lucide-react';
 import { useToast } from './Toast';
 import { useRh } from '../hooks/useRh';
 import { Modal } from './ui/Modal';
 import useEscapeKey from '../hooks/useEscapeKey';
 import { RhProfile } from '../services/rhService';
+import { supabase } from '../lib/supabase';
 
-const RhFormModal = ({ onClose, onAdd }: { onClose: () => void, onAdd: (p: Omit<RhProfile, 'id'>) => void }) => {
+const RhFormModal = ({ onClose, onSave, initialData }: { onClose: () => void, onSave: (p: Partial<RhProfile>) => void, initialData?: RhProfile }) => {
   useEscapeKey(onClose);
   const [form, setForm] = useState({
-    name: '', role: '', type: 'Freelancer' as RhProfile['type'], costPerHour: 0, costPerDay: 0,
-    phone: '', email: '', pix: '', skills: ''
+    name: initialData?.name || '',
+    role: initialData?.role || '',
+    type: initialData?.type || 'Freelancer',
+    costPerHour: initialData?.costPerHour || 0,
+    costPerDay: initialData?.costPerDay || 0,
+    phone: initialData?.phone || '',
+    email: initialData?.email || '',
+    pix: initialData?.pix || '',
+    skills: initialData?.skills ? initialData.skills.join(', ') : ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({
+    onSave({
       name: form.name,
       role: form.role,
-      type: form.type,
+      type: form.type as RhProfile['type'],
       costPerHour: Number(form.costPerHour),
       costPerDay: Number(form.costPerDay),
       phone: form.phone,
       email: form.email,
       pix: form.pix,
       skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name)}&background=random`
+      ...(initialData ? {} : { avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name)}&background=random` })
     });
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} title="Adicionar Colaborador" maxWidth="max-w-md">
+    <Modal isOpen={true} onClose={onClose} title={initialData ? "Editar Colaborador" : "Adicionar Colaborador"} maxWidth="max-w-md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide">Nome Completo</label>
@@ -90,11 +98,41 @@ const RhFormModal = ({ onClose, onAdd }: { onClose: () => void, onAdd: (p: Omit<
 }
 
 const RhCatalogo = () => {
-  const { team, isLoading, addProfile, removeProfile } = useRh();
+  const { team, isLoading, addProfile, updateProfile, removeProfile } = useRh();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('TODOS');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<RhProfile | null>(null);
+  const [uploadingAvatarId, setUploadingAvatarId] = useState<string | null>(null);
   const { showToast, ToastContainer } = useToast();
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>, profile: RhProfile) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    try {
+      setUploadingAvatarId(profile.id);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
+      await updateProfile(profile.id, { avatar: data.publicUrl });
+      showToast('Foto atualizada com sucesso!');
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao atualizar foto.');
+    } finally {
+      setUploadingAvatarId(null);
+    }
+  };
 
   const filteredTeam = team.filter(m => {
     const passType = filterType === 'TODOS' || m.type === filterType;
@@ -202,11 +240,24 @@ const RhCatalogo = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <div className="flex items-start justify-between mb-4 pr-10">
+                <button
+                  onClick={() => setEditingProfile(member)}
+                  className="absolute top-4 right-14 p-2 bg-black/50 hover:bg-blue-500/20 text-gray-500 hover:text-blue-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-blue-500/30"
+                  title="Editar Colaborador"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <div className="flex items-start justify-between mb-4 pr-20">
                   <div className="flex items-center gap-4">
-                    <img src={member.avatar} alt={member.name} className="w-12 h-12 rounded-full object-cover border-2 border-[#333]" />
+                    <div className="relative group/avatar">
+                      <img src={member.avatar} alt={member.name} className="w-12 h-12 rounded-full object-cover border-2 border-[#333] transition-all group-hover/avatar:opacity-50" />
+                      <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                        {uploadingAvatarId === member.id ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white drop-shadow-md" />}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(e, member)} disabled={uploadingAvatarId === member.id} />
+                      </label>
+                    </div>
                     <div>
-                      <h3 className="font-bold text-white text-lg">{member.name}</h3>
+                      <h3 className="font-bold text-white text-lg leading-tight">{member.name}</h3>
                       <p className="text-sm text-gray-400">{member.role}</p>
                     </div>
                   </div>
@@ -266,7 +317,8 @@ const RhCatalogo = () => {
       </div>
 
       <AnimatePresence>
-        {showAddModal && <RhFormModal onClose={() => setShowAddModal(false)} onAdd={(p) => { addProfile(p); setShowAddModal(false); showToast('Perfil adicionado com sucesso!'); }} />}
+        {showAddModal && <RhFormModal onClose={() => setShowAddModal(false)} onSave={(p) => { addProfile(p as Omit<RhProfile, 'id'>); setShowAddModal(false); showToast('Perfil adicionado com sucesso!'); }} />}
+        {editingProfile && <RhFormModal initialData={editingProfile} onClose={() => setEditingProfile(null)} onSave={(p) => { updateProfile(editingProfile.id, p); setEditingProfile(null); showToast('Perfil atualizado com sucesso!'); }} />}
       </AnimatePresence>
       <ToastContainer />
     </motion.div>

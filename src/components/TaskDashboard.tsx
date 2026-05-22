@@ -9,7 +9,7 @@ const TaskDashboard = () => {
   // Métricas Superiores
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.statusId === 's4' || taskStatuses.find(s => s.id === t.statusId)?.name.toUpperCase().includes('PRONTO')).length;
-  const highPriorityTasks = tasks.filter(t => t.priority === 'alta' || t.priority === 'urgente').length;
+  const highPriorityTasks = tasks.filter(t => t.priority === 'High' || t.priority === 'Urgent').length;
   const activeClients = clients.length;
 
   // Por Status (Para as barras horizontais)

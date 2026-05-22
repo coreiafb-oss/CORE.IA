@@ -3,7 +3,7 @@
  * Todas as funções são puras: sem state, sem efeitos colaterais.
  */
 import { supabase } from '../lib/supabase';
-import type { Task, Status, TaskComment, TaskAttachment } from '../types';
+import type { Task, Status, TaskComment, TaskAttachment, TaskSubtask } from '../types';
 
 // ─── Mappers: DB Row → App Type ────────────────────────────────────────────────
 function mapRowToTask(row: Record<string, unknown>): Task {
@@ -17,7 +17,11 @@ function mapRowToTask(row: Record<string, unknown>): Task {
     priority: row.priority as Task['priority'],
     tags: (row.tags as Task['tags']) ?? [],
     relatedTaskIds: (row.related_task_ids as string[]) ?? [],
+    subtasks: (row.subtasks as TaskSubtask[]) ?? [],
+    timeSpent: (row.time_spent as number) ?? 0,
+    isTimerRunning: (row.is_timer_running as boolean) ?? false,
     createdAt: row.created_at as string,
+    completedAt: row.completed_at as string | undefined,
     comments: (row.task_comments as TaskComment[]) ?? [],
     attachments: (row.task_attachments as TaskAttachment[]) ?? [],
   };
@@ -82,6 +86,10 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt' | 'comments
       priority: task.priority,
       tags: (task.tags ?? []) as Record<string, unknown>[],
       related_task_ids: task.relatedTaskIds ?? [],
+      subtasks: (task.subtasks ?? []) as Record<string, unknown>[],
+      time_spent: task.timeSpent ?? 0,
+      is_timer_running: task.isTimerRunning ?? false,
+      completed_at: task.completedAt,
     })
     .select()
     .single();
@@ -102,6 +110,10 @@ export async function updateTask(id: string, patch: Partial<Task>): Promise<void
   if (patch.priority !== undefined)     dbPatch.priority = patch.priority;
   if (patch.tags !== undefined)         dbPatch.tags = patch.tags as Record<string, unknown>[];
   if (patch.relatedTaskIds !== undefined) dbPatch.related_task_ids = patch.relatedTaskIds;
+  if (patch.subtasks !== undefined)     dbPatch.subtasks = patch.subtasks as Record<string, unknown>[];
+  if (patch.timeSpent !== undefined)    dbPatch.time_spent = patch.timeSpent;
+  if (patch.isTimerRunning !== undefined) dbPatch.is_timer_running = patch.isTimerRunning;
+  if (patch.completedAt !== undefined)  dbPatch.completed_at = patch.completedAt;
 
   const { error } = await supabase.from('tasks').update(dbPatch).eq('id', id);
   if (error) throw new Error(`[taskService] updateTask: ${error.message}`);

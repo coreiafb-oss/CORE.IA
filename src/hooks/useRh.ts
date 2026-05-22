@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchRhProfiles, createRhProfile, deleteRhProfile, RhProfile } from '../services/rhService';
+import { fetchRhProfiles, createRhProfile, deleteRhProfile, updateRhProfile, RhProfile } from '../services/rhService';
 
 const initialTeam: RhProfile[] = [
   {
@@ -50,6 +50,15 @@ export function useRh() {
     }
   }, []);
 
+  const updateProfile = useCallback(async (id: string, updates: Partial<Omit<RhProfile, 'id'>>) => {
+    setTeam(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    try {
+      await updateRhProfile(id, updates);
+    } catch (err) {
+      console.error('[useRh] falha ao atualizar:', err);
+    }
+  }, []);
+
   const removeProfile = useCallback(async (id: string) => {
     setTeam(prev => prev.filter(p => p.id !== id));
     try {
@@ -59,5 +68,5 @@ export function useRh() {
     }
   }, []);
 
-  return { team, isLoading, addProfile, removeProfile };
+  return { team, isLoading, addProfile, updateProfile, removeProfile };
 }

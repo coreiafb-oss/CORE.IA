@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronRight, Plus, Flag, Calendar as CalendarIcon, MoreHorizontal, CheckCircle2, ArrowUp, Trash2, Edit3, ArrowRightLeft, Copy } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Flag, Calendar as CalendarIcon, MoreHorizontal, CheckCircle2, ArrowUp, Trash2, Edit3, ArrowRightLeft, Copy, ListTodo, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../context/AppContext';
 import { useToast } from './Toast';
@@ -279,6 +279,18 @@ const ListView = ({ filteredTasks, searchQuery, filterPriority, groupBy = 'statu
                               onClick={() => setSelectedTask(task)}
                             >
                               {task.name}
+                            </span>
+                          )}
+                          {task.subtasks && task.subtasks.length > 0 && (
+                            <span className="text-[10px] text-gray-400 bg-white/5 border border-white/10 px-1.5 py-[2px] rounded flex items-center gap-1">
+                              <ListTodo className="w-3 h-3 text-gray-500" />
+                              {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}
+                            </span>
+                          )}
+                          {task.isTimerRunning && (
+                            <span className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-[2px] rounded flex items-center gap-1 animate-pulse">
+                              <Clock className="w-3 h-3" />
+                              Gravando
                             </span>
                           )}
                           {task.tags?.map(tag => (
